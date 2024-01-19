@@ -19,6 +19,7 @@ nb_level = 50
 nb_level_unlock = 20
 bouton_level_size = 116
 marge = 10
+lvl_select = 0
 menu = "main"
 # / couleur
 # couleur du fond de l'écran
@@ -36,7 +37,7 @@ Upleftcorner_image = pygame.transform.scale(Upleftcorner_image, (32, 32))
 Uprightcorner_image = pygame.transform.rotate(Upleftcorner_image, -90)
 Downrightcorner_image = pygame.transform.rotate(Uprightcorner_image, -90)
 Downleftcorner_image = pygame.transform.rotate(Downrightcorner_image, -90)
-center_image = pygame.image.load("image/centre.png")
+# center_image = pygame.image.load("image/centre.png")
 borehaut_image = pygame.image.load("image/bore.png")
 borehaut_image = pygame.transform.scale(borehaut_image, (1, 16))
 boredroite_image = pygame.transform.rotate(borehaut_image, -90)
@@ -52,19 +53,21 @@ boxcornerDownLeft_image = pygame.transform.rotate(boxcornerDownRight_image, -90)
 # // fonctions
 
 # permet de charger les elements d'un menu précis
-def menu_select(menu):
+def menu_select():
+    global menu
+    boutons.clear()
+    texts.clear()
     if menu == "main":
         boutons.append(Boutons.Bouton(f, 1, "SELECT LEVEL", (500, screen_size[1] - 450), screen_size[0]))
         boutons.append(Boutons.Bouton(f, 2, "SETTINGS", (500, screen_size[1] - 300), screen_size[0]))
         boutons.append(Boutons.Bouton(f, 3, "QUIT", (500, screen_size[1] - 150), screen_size[0]))
-    if menu == "level selector":
-        boutons.clear()
+    elif menu == "level selector":
         rest = screen_size[0] / (bouton_level_size + marge)
         rest = rest - int(rest)
         rest /= 2
         rest *= (bouton_level_size + marge)
         nb_boutonx = int(screen_size[0] / (bouton_level_size + marge))
-        nb_boutony = int((screen_size[1] - 100) / (bouton_level_size + marge))
+        nb_boutony = int((screen_size[1] - 60) / (bouton_level_size + marge))
         index = 0
         for y in range(nb_boutony):
             for x in range(nb_boutonx):
@@ -74,8 +77,12 @@ def menu_select(menu):
                     else:
                         text = str(index)
                     index += 1
-                    boutons.append(Boutons.Bouton(f, index, text, (x * (bouton_level_size + marge) + rest, y * (bouton_level_size + marge) + rest + 100), pos2=(x * (bouton_level_size + marge) + bouton_level_size + rest, y * (bouton_level_size + marge) + bouton_level_size + rest + 100)))
+                    boutons.append(Boutons.Bouton(f, index, text, (x * (bouton_level_size + marge) + rest, y * (bouton_level_size + marge) + rest + 60), pos2=(x * (bouton_level_size + marge) + bouton_level_size + rest, y * (bouton_level_size + marge) + bouton_level_size + rest + 60)))
         boutons.append(Boutons.Bouton(f, index + 1, "x", (10, 10), pos2=(50, 50), animable=False))
+        boutons[-1].text_pos = (20, 5)
+    elif menu == "level":
+        boutons.append(Boutons.Bouton(f, 1, "x", (10, 10), pos2=(50, 50), animable=False))
+        boutons[-1].text_pos = (20, 5)
 
 
 # affiche un text sur la fenêtre
@@ -189,19 +196,28 @@ def transition(nb1, nb2, prop):
 
 
 # regarde chaque input
-def bouton_action(menu, select):
+def bouton_action(select):
+    global menu, lvl_select
     if menu == "main":
         if select == 1:
             menu = "level selector"
-            menu_select(menu)
+            menu_select()
         elif select == 2:
             pass
         elif select == 3:
             quite()
-    if menu == "level selector":
-        if select == nb_level:
+    elif menu == "level selector":
+        if select == nb_level + 1:
             menu = "main"
-            menu_select(menu)
+            menu_select()
+        else:
+            menu = "level"
+            menu_select()
+            lvl_select = select - 1
+            print(lvl_select)
+    elif menu == "level":
+        menu = "main"
+        menu_select()
 
 
 def inpute():
@@ -222,8 +238,8 @@ def inpute():
             if event.key == pygame.K_ESCAPE:
                 quite()
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                bouton_action(menu, select)
+            if event.button == 1 and select != -1 and select is not None:
+                bouton_action(select)
 
 
 # tout est dans le nom
@@ -232,7 +248,7 @@ def quite():
     quit()
 
 
-menu_select(menu)
+menu_select()
 while True:
     deltatime = clock.tick() / 1000
 
