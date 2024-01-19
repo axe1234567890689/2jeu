@@ -8,6 +8,7 @@ from classs import Boutons
 # créer la fenêtre
 screen_size = (1920, 1080)
 screen = pygame.display.set_mode(screen_size)
+screen_center = (screen_size[0] / 2, screen_size[1] / 2)
 # prépare la transformation de text en image
 pygame.init()
 f = pygame.font.SysFont("Arial", 40)
@@ -37,7 +38,6 @@ Upleftcorner_image = pygame.transform.scale(Upleftcorner_image, (32, 32))
 Uprightcorner_image = pygame.transform.rotate(Upleftcorner_image, -90)
 Downrightcorner_image = pygame.transform.rotate(Uprightcorner_image, -90)
 Downleftcorner_image = pygame.transform.rotate(Downrightcorner_image, -90)
-# center_image = pygame.image.load("image/centre.png")
 borehaut_image = pygame.image.load("image/bore.png")
 borehaut_image = pygame.transform.scale(borehaut_image, (1, 16))
 boredroite_image = pygame.transform.rotate(borehaut_image, -90)
@@ -81,8 +81,17 @@ def menu_select():
         boutons.append(Boutons.Bouton(f, index + 1, "x", (10, 10), pos2=(50, 50), animable=False))
         boutons[-1].text_pos = (20, 5)
     elif menu == "level":
-        boutons.append(Boutons.Bouton(f, 1, "x", (10, 10), pos2=(50, 50), animable=False))
-        boutons[-1].text_pos = (20, 5)
+        pass
+    elif menu == "settings":
+        pass
+    elif menu == "pause":
+        boutons.append(Boutons.Bouton(f, -1, "", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] + 400, screen_center[1] + 300), only_draw=True))
+        boutons.append(Boutons.Bouton(f, 0, "x", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] - 350, screen_center[1] - 250), animable=False))
+        boutons[-1].text_pos = (screen_center[0] - 385, screen_center[1] - 300)
+        boutons.append(Boutons.Bouton(f, 1, "MENU", (screen_center[0], screen_center[1] + 25), screen_size[0]))
+        boutons.append(Boutons.Bouton(f, 2, "QUIT", (screen_center[0], screen_center[1] + 150), screen_size[0]))
+        boutons.append(Boutons.Bouton(f, 3, "SETTINGS", (screen_center[0], screen_center[1] - 100), screen_size[0]))
+        boutons.append(Boutons.Bouton(f, 4, "LEVEL SELECTOR", (screen_center[0], screen_center[1] - 225), screen_size[0]))
 
 
 # affiche un text sur la fenêtre
@@ -95,6 +104,9 @@ def afficher_text(text, couleur, pos, taille):
 # affiche chaque Frame
 def affichage():
     screen.fill(couleur_fond)
+
+    if menu == "level" or menu == "pause":
+        draw_level()
 
     for text in texts:
         afficher_text(text[0], text[1], text[2], text[3])
@@ -190,6 +202,11 @@ def affichage():
     pygame.display.flip()
 
 
+# dessine les c omposer du niveau
+def draw_level():
+    pass
+
+
 # permet de connaitre une position pendant une transition
 def transition(nb1, nb2, prop):
     return nb1 * prop + nb2 * (-prop + 1)
@@ -203,7 +220,8 @@ def bouton_action(select):
             menu = "level selector"
             menu_select()
         elif select == 2:
-            pass
+            menu = "settings"
+            menu_select()
         elif select == 3:
             quite()
     elif menu == "level selector":
@@ -218,25 +236,43 @@ def bouton_action(select):
     elif menu == "level":
         menu = "main"
         menu_select()
+    elif menu == "pause":
+        if select == 0:
+            menu = "level"
+            menu_select()
+        elif select == 1:
+            menu = "main"
+            menu_select()
+        elif select == 2:
+            quite()
+        elif select == 3:
+            menu = "settings"
+            menu_select()
+        elif select == 4:
+            menu = "level selector"
+            menu_select()
 
 
 def inpute():
-    global mouse_pos, deltatime
+    global mouse_pos, deltatime, menu
     mouse_pos = pygame.mouse.get_pos()
 
-    select = 0
+    select = -1
     for bouton in boutons:
-        selectint = bouton.is_trigger(mouse_pos)
-        if selectint is not None:
-            select = selectint
-        bouton.stape(deltatime)
+        if not bouton.only_draw:
+            selectint = bouton.is_trigger(mouse_pos)
+            if selectint is not None:
+                select = selectint
+            bouton.stape(deltatime)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             quite()
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                quite()
+            if menu == "level":
+                if event.key == pygame.K_ESCAPE:
+                    menu = "pause"
+                    menu_select()
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1 and select != -1 and select is not None:
                 bouton_action(select)
@@ -254,3 +290,4 @@ while True:
 
     affichage()
     inpute()
+
