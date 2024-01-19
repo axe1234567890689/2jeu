@@ -1,0 +1,240 @@
+# // import des bibliothèque
+
+import pygame
+from classs import Boutons
+
+# // variables
+
+# créer la fenêtre
+screen_size = (1920, 1080)
+screen = pygame.display.set_mode(screen_size)
+# prépare la transformation de text en image
+pygame.init()
+f = pygame.font.SysFont("Arial", 40)
+# permet de gereer le temp
+clock = pygame.time.Clock()
+# le temp entre deux refresh de screen
+deltatime = 0
+nb_level = 50
+nb_level_unlock = 20
+bouton_level_size = 116
+marge = 10
+menu = "main"
+# / couleur
+# couleur du fond de l'écran
+couleur_fond = (200, 200, 200)
+# / list
+# texts à afficher chaque frames
+texts = []
+# boutons
+boutons = []
+# position de la souris
+mouse_pos = ()
+# charge les images
+Upleftcorner_image = pygame.image.load("image/angle bouton.png")
+Upleftcorner_image = pygame.transform.scale(Upleftcorner_image, (32, 32))
+Uprightcorner_image = pygame.transform.rotate(Upleftcorner_image, -90)
+Downrightcorner_image = pygame.transform.rotate(Uprightcorner_image, -90)
+Downleftcorner_image = pygame.transform.rotate(Downrightcorner_image, -90)
+center_image = pygame.image.load("image/centre.png")
+borehaut_image = pygame.image.load("image/bore.png")
+borehaut_image = pygame.transform.scale(borehaut_image, (1, 16))
+boredroite_image = pygame.transform.rotate(borehaut_image, -90)
+borebas_image = pygame.transform.rotate(boredroite_image, -90)
+boregauche_image = pygame.transform.rotate(borebas_image, -90)
+boxcornerUpLeft_image = pygame.image.load("image/box.png")
+boxcornerUpLeft_image = pygame.transform.scale(boxcornerUpLeft_image, (16, 16))
+boxcornerUpRight_image = pygame.transform.rotate(boxcornerUpLeft_image, -90)
+boxcornerDownRight_image = pygame.transform.rotate(boxcornerUpRight_image, -90)
+boxcornerDownLeft_image = pygame.transform.rotate(boxcornerDownRight_image, -90)
+
+
+# // fonctions
+
+# permet de charger les elements d'un menu précis
+def menu_select(menu):
+    if menu == "main":
+        boutons.append(Boutons.Bouton(f, 1, "SELECT LEVEL", (500, screen_size[1] - 450), screen_size[0]))
+        boutons.append(Boutons.Bouton(f, 2, "SETTINGS", (500, screen_size[1] - 300), screen_size[0]))
+        boutons.append(Boutons.Bouton(f, 3, "QUIT", (500, screen_size[1] - 150), screen_size[0]))
+    if menu == "level selector":
+        boutons.clear()
+        rest = screen_size[0] / (bouton_level_size + marge)
+        rest = rest - int(rest)
+        rest /= 2
+        rest *= (bouton_level_size + marge)
+        nb_boutonx = int(screen_size[0] / (bouton_level_size + marge))
+        nb_boutony = int((screen_size[1] - 100) / (bouton_level_size + marge))
+        index = 0
+        for y in range(nb_boutony):
+            for x in range(nb_boutonx):
+                if index < nb_level:
+                    if index == 0:
+                        text = "TUTO"
+                    else:
+                        text = str(index)
+                    index += 1
+                    boutons.append(Boutons.Bouton(f, index, text, (x * (bouton_level_size + marge) + rest, y * (bouton_level_size + marge) + rest + 100), pos2=(x * (bouton_level_size + marge) + bouton_level_size + rest, y * (bouton_level_size + marge) + bouton_level_size + rest + 100)))
+        boutons.append(Boutons.Bouton(f, index + 1, "x", (10, 10), pos2=(50, 50), animable=False))
+
+
+# affiche un text sur la fenêtre
+def afficher_text(text, couleur, pos, taille):
+    text_font = pygame.font.SysFont("arial", taille)
+    text = text_font.render(text, True, couleur)
+    screen.blit(text, pos)
+
+
+# affiche chaque Frame
+def affichage():
+    screen.fill(couleur_fond)
+
+    for text in texts:
+        afficher_text(text[0], text[1], text[2], text[3])
+
+    for bouton in boutons:
+        if bouton.animate:
+            if bouton.is_select:
+                prop = bouton.temp_passer / bouton.temp_animation
+            else:
+                prop = -bouton.temp_passer / bouton.temp_animation + 1
+            screen.blit(Upleftcorner_image, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
+                                             transition(bouton.pos1[1], bouton.pos1[1] + 10, prop)))
+            screen.blit(Downrightcorner_image, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 32,
+                                                transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 32))
+            screen.blit(Uprightcorner_image, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 32,
+                                              transition(bouton.pos1[1], bouton.pos1[1] + 10, prop)))
+            screen.blit(Downleftcorner_image, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
+                                               transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 32))
+            prop = -prop + 1
+            screen.blit(boxcornerUpLeft_image, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
+                                                transition(bouton.pos1[1], bouton.pos1[1] + 10, prop)))
+            screen.blit(boxcornerUpRight_image, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 16,
+                                                 transition(bouton.pos1[1], bouton.pos1[1] + 10, prop)))
+            screen.blit(boxcornerDownRight_image, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 16,
+                                                   transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 16))
+            screen.blit(boxcornerDownLeft_image, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
+                                                  transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 16))
+
+            c = [transition(0, 20, prop) - 1]
+
+            bore = pygame.transform.scale(borehaut_image, ((bouton.pos2[0] - bouton.pos1[0]) - 32 - c[0], 16))
+            screen.blit(bore, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop) + 16,
+                               transition(bouton.pos1[1], bouton.pos1[1] + 10, prop)))
+            bore = pygame.transform.scale(borebas_image, ((bouton.pos2[0] - bouton.pos1[0]) - 32 - c[0], 16))
+            screen.blit(bore, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop) + 16,
+                               transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 16))
+            bore = pygame.transform.scale(boregauche_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 32 - c[0]))
+            screen.blit(bore, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
+                               transition(bouton.pos1[1], bouton.pos1[1] + 10, prop) + 16))
+            bore = pygame.transform.scale(boredroite_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 32 - c[0]))
+            screen.blit(bore, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 16,
+                               transition(bouton.pos1[1], bouton.pos1[1] + 10, prop) + 16))
+
+            pygame.draw.rect(screen, (255, 158, 109), (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop) + 16,
+                                                       transition(bouton.pos1[1], bouton.pos1[1] + 10, prop) + 16,
+                                                       (bouton.pos2[0] - bouton.pos1[0]) - 32 - c[0],
+                                                       (bouton.pos2[1] - bouton.pos1[1]) - 32 - c[0]))
+        else:
+            if bouton.is_select and bouton.animable:
+                screen.blit(Upleftcorner_image, bouton.pos1)
+                screen.blit(Downrightcorner_image, (bouton.pos2[0] - 32, bouton.pos2[1] - 32))
+                screen.blit(Uprightcorner_image, (bouton.pos2[0] - 32, bouton.pos1[1]))
+                screen.blit(Downleftcorner_image, (bouton.pos1[0], bouton.pos2[1] - 32))
+
+                screen.blit(boxcornerUpLeft_image, (bouton.pos1[0] + 10, bouton.pos1[1] + 10))
+                screen.blit(boxcornerUpRight_image, (bouton.pos2[0] - 26, bouton.pos1[1] + 10))
+                screen.blit(boxcornerDownRight_image, (bouton.pos2[0] - 26, bouton.pos2[1] - 26))
+                screen.blit(boxcornerDownLeft_image, (bouton.pos1[0] + 10, bouton.pos2[1] - 26))
+
+                bore = pygame.transform.scale(borehaut_image, ((bouton.pos2[0] - bouton.pos1[0]) - 52, 16))
+                screen.blit(bore, (bouton.pos1[0] + 26, bouton.pos1[1] + 10))
+                bore = pygame.transform.scale(borebas_image, ((bouton.pos2[0] - bouton.pos1[0]) - 52, 16))
+                screen.blit(bore, (bouton.pos1[0] + 26, bouton.pos2[1] - 26))
+                bore = pygame.transform.scale(boregauche_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 52))
+                screen.blit(bore, (bouton.pos1[0] + 10, bouton.pos1[1] + 26))
+                bore = pygame.transform.scale(boredroite_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 52))
+                screen.blit(bore, (bouton.pos2[0] - 26, bouton.pos1[1] + 26))
+
+                pygame.draw.rect(screen, (255, 158, 109), (
+                bouton.pos1[0] + 26, bouton.pos1[1] + 26, (bouton.pos2[0] - bouton.pos1[0]) - 52,
+                (bouton.pos2[1] - bouton.pos1[1]) - 52))
+            else:
+                screen.blit(boxcornerUpLeft_image, bouton.pos1)
+                screen.blit(boxcornerUpRight_image, (bouton.pos2[0] - 16, bouton.pos1[1]))
+                screen.blit(boxcornerDownLeft_image, (bouton.pos1[0], bouton.pos2[1] - 16))
+                screen.blit(boxcornerDownRight_image, (bouton.pos2[0] - 16, bouton.pos2[1] - 16))
+
+                bore = pygame.transform.scale(borehaut_image, ((bouton.pos2[0] - bouton.pos1[0]) - 32, 16))
+                screen.blit(bore, (bouton.pos1[0] + 16, bouton.pos1[1]))
+                bore = pygame.transform.scale(borebas_image, ((bouton.pos2[0] - bouton.pos1[0]) - 32, 16))
+                screen.blit(bore, (bouton.pos1[0] + 16, bouton.pos2[1] - 16))
+                bore = pygame.transform.scale(boregauche_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 32))
+                screen.blit(bore, (bouton.pos1[0], bouton.pos1[1] + 16))
+                bore = pygame.transform.scale(boredroite_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 32))
+                screen.blit(bore, (bouton.pos2[0] - 16, bouton.pos1[1] + 16))
+
+                pygame.draw.rect(screen, (255, 158, 109), (
+                bouton.pos1[0] + 16, bouton.pos1[1] + 16, (bouton.pos2[0] - bouton.pos1[0]) - 32,
+                (bouton.pos2[1] - bouton.pos1[1]) - 32))
+
+        screen.blit(bouton.text, bouton.text_pos)
+
+    pygame.display.flip()
+
+
+# permet de connaitre une position pendant une transition
+def transition(nb1, nb2, prop):
+    return nb1 * prop + nb2 * (-prop + 1)
+
+
+# regarde chaque input
+def bouton_action(menu, select):
+    if menu == "main":
+        if select == 1:
+            menu = "level selector"
+            menu_select(menu)
+        elif select == 2:
+            pass
+        elif select == 3:
+            quite()
+    if menu == "level selector":
+        if select == nb_level:
+            menu = "main"
+            menu_select(menu)
+
+
+def inpute():
+    global mouse_pos, deltatime
+    mouse_pos = pygame.mouse.get_pos()
+
+    select = 0
+    for bouton in boutons:
+        selectint = bouton.is_trigger(mouse_pos)
+        if selectint is not None:
+            select = selectint
+        bouton.stape(deltatime)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            quite()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                quite()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                bouton_action(menu, select)
+
+
+# tout est dans le nom
+def quite():
+    pygame.quit()
+    quit()
+
+
+menu_select(menu)
+while True:
+    deltatime = clock.tick() / 1000
+
+    affichage()
+    inpute()
