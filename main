@@ -1,14 +1,12 @@
 # // import des bibliothèque
 
 import pygame
+import math
 from classs import Boutons
 
 # // variables
 
 # créer la fenêtre
-screen_size = (1920, 1080)
-screen = pygame.display.set_mode(screen_size)
-screen_center = (screen_size[0] / 2, screen_size[1] / 2)
 # prépare la transformation de text en image
 pygame.init()
 f = pygame.font.SysFont("Arial", 40)
@@ -22,6 +20,8 @@ bouton_level_size = 116
 marge = 10
 lvl_select = 0
 menu = "main"
+binding = False
+name_bind = ""
 # / couleur
 # couleur du fond de l'écran
 couleur_fond = (200, 200, 200)
@@ -32,6 +32,10 @@ texts = []
 boutons = []
 # position de la souris
 mouse_pos = ()
+
+parametre = {"touches": {"SAUTER": pygame.K_SPACE, "GAUCHE": pygame.K_q, "DROITE": pygame.K_d, "PAUSE": 27}, "afficher": True}
+parametre_no_save = {"touches": {"SAUTER": pygame.K_SPACE, "GAUCHE": pygame.K_q, "DROITE": pygame.K_d, "PAUSE": 27}, "afficher": True}
+name_touche = {97: "A", 98: "B", 99: "C", 100: "D", 101: "E", 102: "F", 103: "G", 104: "H", 105: "I", 106: "J", 107: "K", 108: "L", 109: "M", 110: "N", 111: "O", 112: "P", 113: "Q", 114: "R", 115: "S", 116: "T", 117: "U", 118: "V", 119: "W", 120: "X", 121: "Y", 122: "Z", 9: "TAB", 1073741881: "MAJ LOCK", 1073742049: "SHIFT", 1073742048: "LEFT CTRL", 1073742051: "WINDOW", 1073742050: "LEFT ALT", 32: "SPACE", 1073742054: "RIGHT ALT", 1073741925: "PASTE", 1073742052: "RIGHT CRTL", 1073742053: "RIGHT SHIFT", 13: "ENTER", 42: "*", 44: ",", 59: ";", 58: ":", 33: "!", 249: "ù", 94: "^", 36: "$", 1073741903: "RIGHT", 1073741904: "LEFT", 1073741905: "DOWN", 1073741906: "UP", 1073741898: "HOME", 1073741899: "PAGE UP", 1073741902: "PAGE DON", 1073741901: "END", 1073741882: "F1", 1073741883: "F2", 1073741884: "F3", 1073741885: "F4", 1073741886: "F5", 1073741887: "F6", 1073741888: "F7", 1073741889: "F8", 1073741890: "F9", 1073741891: "F10", 1073741892: "F11", 1073741893: "F12", 27: "ESCAPE", 1073741896: "PAUSE", 1073741897: "INSER", 127: "SUPPR", 8: "DELETE", 61: "=", 41: ")", 48: "à", 49: "&", 50: "é", 51: '"', 52: "'", 53: "(", 54:"-", 55: "è", 56: "_", 57: "ç", 178: "²"}
 # charge les images
 Upleftcorner_image = pygame.image.load("image/angle bouton.png")
 Upleftcorner_image = pygame.transform.scale(Upleftcorner_image, (32, 32))
@@ -48,6 +52,9 @@ boxcornerUpLeft_image = pygame.transform.scale(boxcornerUpLeft_image, (16, 16))
 boxcornerUpRight_image = pygame.transform.rotate(boxcornerUpLeft_image, -90)
 boxcornerDownRight_image = pygame.transform.rotate(boxcornerUpRight_image, -90)
 boxcornerDownLeft_image = pygame.transform.rotate(boxcornerDownRight_image, -90)
+screen_size = (1920, 1080)
+screen = pygame.display.set_mode(screen_size)
+screen_center = (screen_size[0] / 2, screen_size[1] / 2)
 
 
 # // fonctions
@@ -82,8 +89,27 @@ def menu_select():
         boutons[-1].text_pos = (20, 5)
     elif menu == "level":
         pass
-    elif menu == "settings":
-        pass
+    elif menu == "settings" or menu == "settings pause":
+        boutons.append(Boutons.Bouton(f, -1, "", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] + 400, screen_center[1] + 300), only_draw=True))
+        boutons.append(Boutons.Bouton(f, 0, "x", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] - 350, screen_center[1] - 250), animable=False))
+        boutons[-1].text_pos = (screen_center[0] - 385, screen_center[1] - 300)
+        boutons.append(Boutons.Bouton(f, 1, "SAVE", (screen_center[0], screen_center[1] + 150), screen_size[0]))
+        boutons.append(Boutons.Bouton(f, 2, "KEYBIND", (screen_center[0], screen_center[1] + 25), screen_size[0]))
+    elif menu == "keybind" or menu == "keybindl":
+        boutons.append(Boutons.Bouton(f, -1, "", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] + 400, screen_center[1] + 300), only_draw=True))
+        boutons.append(Boutons.Bouton(f, 0, "x", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] - 350, screen_center[1] - 250), animable=False))
+        boutons[-1].text_pos = (screen_center[0] - 385, screen_center[1] - 300)
+        x = screen_center[0]
+        y = screen_center[1] - 250
+        i = 1
+        for action in parametre["touches"]:
+            image1 = f.render(action, True, (0, 0, 0))
+            image2 = f.render(name_touche[parametre_no_save["touches"][action]], True, (0, 0, 0))
+            texts.append([action, (0, 0, 0), (x - image1.get_width(), y), 30])
+            boutons.append(Boutons.Bouton(f, i, name_touche[parametre_no_save["touches"][action]], (x, y - 20), pos2=(x + 300, y + 60)))
+            boutons[-1].text_pos = (x + 150 - (image2.get_width() / 2), y)
+            i += 1
+            y += 100
     elif menu == "pause":
         boutons.append(Boutons.Bouton(f, -1, "", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] + 400, screen_center[1] + 300), only_draw=True))
         boutons.append(Boutons.Bouton(f, 0, "x", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] - 350, screen_center[1] - 250), animable=False))
@@ -105,11 +131,8 @@ def afficher_text(text, couleur, pos, taille):
 def affichage():
     screen.fill(couleur_fond)
 
-    if menu == "level" or menu == "pause":
+    if menu == "level" or menu == "pause" or menu == "settings pause":
         draw_level()
-
-    for text in texts:
-        afficher_text(text[0], text[1], text[2], text[3])
 
     for bouton in boutons:
         if bouton.animate:
@@ -199,6 +222,9 @@ def affichage():
 
         screen.blit(bouton.text, bouton.text_pos)
 
+    for text in texts:
+        afficher_text(text[0], text[1], text[2], text[3])
+
     pygame.display.flip()
 
 
@@ -213,8 +239,13 @@ def transition(nb1, nb2, prop):
 
 
 # regarde chaque input
+def save_setting():
+    for category in parametre:
+        parametre_no_save[category] = parametre[category]
+
+
 def bouton_action(select):
-    global menu, lvl_select
+    global menu, lvl_select, binding, name_bind
     if menu == "main":
         if select == 1:
             menu = "level selector"
@@ -232,7 +263,6 @@ def bouton_action(select):
             menu = "level"
             menu_select()
             lvl_select = select - 1
-            print(lvl_select)
     elif menu == "level":
         menu = "main"
         menu_select()
@@ -246,10 +276,43 @@ def bouton_action(select):
         elif select == 2:
             quite()
         elif select == 3:
-            menu = "settings"
+            menu = "settings pause"
             menu_select()
         elif select == 4:
             menu = "level selector"
+            menu_select()
+    elif menu == "settings pause":
+        if select == 0 or select == 1:
+            menu = "pause"
+            menu_select()
+            if select == 1:
+                save_setting()
+        elif select == 2:
+            menu = "keybindl"
+            menu_select()
+    elif menu == "settings":
+        if select == 0 or select == 1:
+            menu = "main"
+            menu_select()
+            if select == 1:
+                save_setting()
+        elif select == 2:
+            menu = "keybind"
+            menu_select()
+    elif menu == "keybind":
+        if select == 0:
+            menu = "settings"
+            menu_select()
+        else:
+            binding = True
+            i = 1
+            for action in parametre["touches"]:
+                if i == select:
+                    name_bind = action
+                i += 1
+    elif menu == "keybindl":
+        if select == 0:
+            menu = "settings pause"
             menu_select()
 
 
@@ -269,8 +332,12 @@ def inpute():
         if event.type == pygame.QUIT:
             quite()
         elif event.type == pygame.KEYDOWN:
-            if menu == "level":
-                if event.key == pygame.K_ESCAPE:
+            print(event.key)
+            if binding:
+                parametre_no_save["touches"][name_bind] = event.key
+                menu_select()
+            elif menu == "level":
+                if event.key == parametre["touches"]["PAUSE"]:
                     menu = "pause"
                     menu_select()
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -287,6 +354,9 @@ def quite():
 menu_select()
 while True:
     deltatime = clock.tick() / 1000
+
+    affichage()
+    inpute()
 
     affichage()
     inpute()
