@@ -35,7 +35,6 @@ mouse_pos = ()
 
 parametre = {"touches": {"SAUTER": pygame.K_SPACE, "GAUCHE": pygame.K_q, "DROITE": pygame.K_d, "PAUSE": 27}, "afficher": True}
 parametre_no_save = {"touches": {"SAUTER": pygame.K_SPACE, "GAUCHE": pygame.K_q, "DROITE": pygame.K_d, "PAUSE": 27}, "afficher": True}
-name_touche = {97: "A", 98: "B", 99: "C", 100: "D", 101: "E", 102: "F", 103: "G", 104: "H", 105: "I", 106: "J", 107: "K", 108: "L", 109: "M", 110: "N", 111: "O", 112: "P", 113: "Q", 114: "R", 115: "S", 116: "T", 117: "U", 118: "V", 119: "W", 120: "X", 121: "Y", 122: "Z", 9: "TAB", 1073741881: "MAJ LOCK", 1073742049: "SHIFT", 1073742048: "LEFT CTRL", 1073742051: "WINDOW", 1073742050: "LEFT ALT", 32: "SPACE", 1073742054: "RIGHT ALT", 1073741925: "PASTE", 1073742052: "RIGHT CRTL", 1073742053: "RIGHT SHIFT", 13: "ENTER", 42: "*", 44: ",", 59: ";", 58: ":", 33: "!", 249: "ù", 94: "^", 36: "$", 1073741903: "RIGHT", 1073741904: "LEFT", 1073741905: "DOWN", 1073741906: "UP", 1073741898: "HOME", 1073741899: "PAGE UP", 1073741902: "PAGE DON", 1073741901: "END", 1073741882: "F1", 1073741883: "F2", 1073741884: "F3", 1073741885: "F4", 1073741886: "F5", 1073741887: "F6", 1073741888: "F7", 1073741889: "F8", 1073741890: "F9", 1073741891: "F10", 1073741892: "F11", 1073741893: "F12", 27: "ESCAPE", 1073741896: "PAUSE", 1073741897: "INSER", 127: "SUPPR", 8: "DELETE", 61: "=", 41: ")", 48: "à", 49: "&", 50: "é", 51: '"', 52: "'", 53: "(", 54:"-", 55: "è", 56: "_", 57: "ç", 178: "²"}
 # charge les images
 Upleftcorner_image = pygame.image.load("image/angle bouton.png")
 Upleftcorner_image = pygame.transform.scale(Upleftcorner_image, (32, 32))
@@ -104,9 +103,9 @@ def menu_select():
         i = 1
         for action in parametre["touches"]:
             image1 = f.render(action, True, (0, 0, 0))
-            image2 = f.render(name_touche[parametre_no_save["touches"][action]], True, (0, 0, 0))
+            image2 = f.render(pygame.key.name(parametre_no_save["touches"][action)], True, (0, 0, 0))
             texts.append([action, (0, 0, 0), (x - image1.get_width(), y), 30])
-            boutons.append(Boutons.Bouton(f, i, name_touche[parametre_no_save["touches"][action]], (x, y - 20), pos2=(x + 300, y + 60)))
+           boutons.append(Boutons.Bouton(f,i, pygame.key.name(parametre_no_save["touches"][action]), (x, y - 20), pos2=(x + 300, y + 60)))
             boutons[-1].text_pos = (x + 150 - (image2.get_width() / 2), y)
             i += 1
             y += 100
