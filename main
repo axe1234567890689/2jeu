@@ -103,9 +103,9 @@ def menu_select():
         i = 1
         for action in parametre["touches"]:
             image1 = f.render(action, True, (0, 0, 0))
-            image2 = f.render(pygame.key.name(parametre_no_save["touches"][action)], True, (0, 0, 0))
+            image2 = f.render(pygame.key.name(parametre_no_save["touches"][action]), True, (0, 0, 0))
             texts.append([action, (0, 0, 0), (x - image1.get_width(), y), 30])
-           boutons.append(Boutons.Bouton(f,i, pygame.key.name(parametre_no_save["touches"][action]), (x, y - 20), pos2=(x + 300, y + 60)))
+            boutons.append(Boutons.Bouton(f,i, pygame.key.name(parametre_no_save["touches"][action]), (x, y - 20), pos2=(x + 300, y + 60)))
             boutons[-1].text_pos = (x + 150 - (image2.get_width() / 2), y)
             i += 1
             y += 100
