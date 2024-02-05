@@ -356,6 +356,3 @@ while True:
 
     affichage()
     inpute()
-
-    affichage()
-    inpute()
