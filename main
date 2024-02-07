@@ -1,11 +1,10 @@
 # // import des bibliothèque
 
 import pygame
-import math
+import json
 from classs import Boutons
 
 # // variables
-
 # créer la fenêtre
 # prépare la transformation de text en image
 pygame.init()
@@ -13,12 +12,15 @@ f = pygame.font.SysFont("Arial", 40)
 # permet de gereer le temp
 clock = pygame.time.Clock()
 # le temp entre deux refresh de screen
+file_save = json.loads(open("save.json", "r").read())
 deltatime = 0
 nb_level = 50
 nb_level_unlock = 20
 bouton_level_size = 116
 marge = 10
 lvl_select = 0
+color_select = 0
+colors = [(200, 0, 0), (0, 200, 0), (0, 0, 200), (200, 200, 0), (0, 200, 200), (200, 0, 200)]
 menu = "main"
 binding = False
 name_bind = ""
@@ -33,8 +35,18 @@ boutons = []
 # position de la souris
 mouse_pos = ()
 
-parametre = {"touches": {"SAUTER": pygame.K_SPACE, "GAUCHE": pygame.K_q, "DROITE": pygame.K_d, "PAUSE": 27}, "afficher": True}
-parametre_no_save = {"touches": {"SAUTER": pygame.K_SPACE, "GAUCHE": pygame.K_q, "DROITE": pygame.K_d, "PAUSE": 27}, "afficher": True}
+parametre = file_save["parametre"]
+parametre_no_save = file_save["parametre"]
+screen_size = parametre["screen size"]
+propy = screen_size[1] / 1080
+propx = screen_size[0] / 1920
+joueur = [[100, 1000], 10 * propy, -300 * propy, 1, 50 * propy, True, False, False]
+all_terrain = file_save["level"]
+for num_lvl in all_terrain:
+    for color in all_terrain[num_lvl]:
+        for carer in all_terrain[num_lvl][color]:
+            all_terrain[num_lvl][color][carer]["pos"] = (all_terrain[num_lvl][color][carer]["rect"][0] * screen_size[0], all_terrain[num_lvl][color][carer]["rect"][1] * screen_size[1], all_terrain[num_lvl][color][carer]["rect"][2] * screen_size[0], all_terrain[num_lvl][color][carer]["rect"][3] * screen_size[1])
+            all_terrain[num_lvl][color][carer]["visuel"] = (all_terrain[num_lvl][color][carer]["pos"][0], all_terrain[num_lvl][color][carer]["pos"][1], all_terrain[num_lvl][color][carer]["pos"][2] - all_terrain[num_lvl][color][carer]["pos"][0], all_terrain[num_lvl][color][carer]["pos"][3] - all_terrain[num_lvl][color][carer]["pos"][1])
 # charge les images
 Upleftcorner_image = pygame.image.load("image/angle bouton.png")
 Upleftcorner_image = pygame.transform.scale(Upleftcorner_image, (32, 32))
@@ -51,7 +63,6 @@ boxcornerUpLeft_image = pygame.transform.scale(boxcornerUpLeft_image, (16, 16))
 boxcornerUpRight_image = pygame.transform.rotate(boxcornerUpLeft_image, -90)
 boxcornerDownRight_image = pygame.transform.rotate(boxcornerUpRight_image, -90)
 boxcornerDownLeft_image = pygame.transform.rotate(boxcornerDownRight_image, -90)
-screen_size = (1920, 1080)
 screen = pygame.display.set_mode(screen_size)
 screen_center = (screen_size[0] / 2, screen_size[1] / 2)
 
@@ -99,12 +110,12 @@ def menu_select():
         boutons.append(Boutons.Bouton(f, 0, "x", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] - 350, screen_center[1] - 250), animable=False))
         boutons[-1].text_pos = (screen_center[0] - 385, screen_center[1] - 300)
         x = screen_center[0]
-        y = screen_center[1] - 250
+        y = screen_center[1] - 270
         i = 1
         for action in parametre["touches"]:
             image1 = f.render(action, True, (0, 0, 0))
             image2 = f.render(pygame.key.name(parametre_no_save["touches"][action]), True, (0, 0, 0))
-            texts.append([action, (0, 0, 0), (x - image1.get_width(), y), 30])
+            texts.append([action, (0, 0, 0), (x - image1.get_width() + image1.get_width() / 4, y), 30])
             boutons.append(Boutons.Bouton(f,i, pygame.key.name(parametre_no_save["touches"][action]), (x, y - 20), pos2=(x + 300, y + 60)))
             boutons[-1].text_pos = (x + 150 - (image2.get_width() / 2), y)
             i += 1
@@ -229,7 +240,12 @@ def affichage():
 
 # dessine les c omposer du niveau
 def draw_level():
-    pass
+    for index in all_terrain["all"][str(color_select)]:
+        pygame.draw.rect(screen, colors[color_select], all_terrain["all"][str(color_select)][index]["visuel"])
+    for index in all_terrain[str(lvl_select)][str(color_select)]:
+        pygame.draw.rect(screen, colors[color_select], all_terrain[str(lvl_select)][str(color_select)][index]["visuel"])
+
+    pygame.draw.circle(screen, colors[color_select], joueur[0], joueur[1])
 
 
 # permet de connaitre une position pendant une transition
@@ -244,7 +260,7 @@ def save_setting():
 
 
 def bouton_action(select):
-    global menu, lvl_select, binding, name_bind
+    global menu, lvl_select, binding, name_bind, color_select
     if menu == "main":
         if select == 1:
             menu = "level selector"
@@ -262,6 +278,7 @@ def bouton_action(select):
             menu = "level"
             menu_select()
             lvl_select = select - 1
+            color_select = 0
     elif menu == "level":
         menu = "main"
         menu_select()
@@ -316,7 +333,7 @@ def bouton_action(select):
 
 
 def inpute():
-    global mouse_pos, deltatime, menu
+    global mouse_pos, deltatime, menu, binding, color_select, joueur
     mouse_pos = pygame.mouse.get_pos()
 
     select = -1
@@ -331,14 +348,37 @@ def inpute():
         if event.type == pygame.QUIT:
             quite()
         elif event.type == pygame.KEYDOWN:
-            print(event.key)
             if binding:
                 parametre_no_save["touches"][name_bind] = event.key
                 menu_select()
+                binding = False
             elif menu == "level":
                 if event.key == parametre["touches"]["PAUSE"]:
                     menu = "pause"
                     menu_select()
+                elif event.key == parametre["touches"]["AVANCER DANS LES COULEURS"]:
+                    color_select += 1
+                    if color_select >= 6:
+                        color_select -= 6
+                    if color_select > lvl_select:
+                        color_select -= (lvl_select + 1)
+                elif event.key == parametre["touches"]["RECULER DANS LES COULEURS"]:
+                    color_select -= 1
+                    if color_select < 0:
+                        color_select += min((lvl_select + 1), 6)
+                elif event.key == parametre["touches"]["SAUTER"]:
+                    if joueur[5]:
+                        joueur[2] -= 300
+                if event.key == parametre["touches"]["GAUCHE"]:
+                    joueur[7] = True
+                if event.key == parametre["touches"]["DROITE"]:
+                    joueur[6] = True
+        elif event.type == pygame.KEYUP:
+            if menu == "level":
+                if event.key == parametre["touches"]["GAUCHE"]:
+                    joueur[7] = False
+                if event.key == parametre["touches"]["DROITE"]:
+                    joueur[6] = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1 and select != -1 and select is not None:
                 bouton_action(select)
@@ -350,9 +390,49 @@ def quite():
     quit()
 
 
+def collision(rect, pos, r):
+    print(rect)
+    recte = rect['pos']
+    if rect["trigger"]:
+        if recte[0] - r < pos[0] < recte[2] + r:
+            if recte[1] - r < pos[1] < recte[1]:
+                return [pos[0], pos[1] - (recte[1] - pos[1] - r) * -1]
+            elif recte[3] < pos[1] < recte[3] + r:
+                return [pos[0], pos[1] + (pos[1] - recte[3] - r) * -1]
+        if recte[1] - r < pos[1] < recte[3] + r:
+            if recte[0] - r < pos[0] < recte[0]:
+                return [pos[0] - (recte[0] - pos[0] - r) * -1, pos[1]]
+            elif recte[2] - r < pos[0] < recte[2]:
+                return [pos[0] - (recte[0] - pos[0] - r) * -1, pos[1]]
+
+    return pos
+
+
+def frame_stape(deltatime):
+    global joueur
+    expos = joueur[0][1]
+    joueur[0][1] += joueur[2] * deltatime + 9.81 * deltatime * deltatime * joueur[4]
+    d = joueur[0][1] - expos
+    expos = joueur[0][1]
+    if joueur[6]:
+        joueur[0][0] += joueur[3]
+    if joueur[7]:
+        joueur[0][0] -= joueur[3]
+    for index in all_terrain["all"][str(color_select)]:
+        joueur[0] = collision(all_terrain["all"][str(color_select)][index], joueur[0], joueur[1])
+    for index in all_terrain[str(lvl_select)][str(color_select)]:
+        joueur[0] = collision(all_terrain[str(lvl_select)][str(color_select)][index], joueur[0], joueur[1])
+    if expos == joueur[0][1]:
+        joueur[2] = d / deltatime
+    else:
+        joueur[2] = 0
+
+
 menu_select()
 while True:
     deltatime = clock.tick() / 1000
 
     affichage()
+    if menu == "level":
+        frame_stape(deltatime)
     inpute()
