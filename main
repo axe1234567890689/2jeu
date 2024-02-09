@@ -1,29 +1,42 @@
 # // import des bibliothèque
 
+# affichage
 import pygame
+# sauvegarde
 import json
+# on sait jamais
 import math
+# les boutons
 from classs import Boutons
 
 # // variables
-# créer la fenêtre
 # prépare la transformation de text en image
 pygame.init()
 f = pygame.font.SysFont("Arial", 40)
 # permet de gereer le temp
 clock = pygame.time.Clock()
-# le temp entre deux refresh de screen
+# ouvre le fichier sauvegarde
 file_save = json.loads(open("save.json", "r").read())
+# le temp entre deux refresh de screen
 deltatime = 0
+# le nombre de level créer
 nb_level = 50
+# le nombre de level debloquer
 nb_level_unlock = 20
+# / le selecteur de level
+# la taille des boutons
 bouton_level_size = 116
+# l'ecart entre les boutons
 marge = 10
+# le level selectionner
 lvl_select = 0
+# la couleur selectionner
 color_select = 0
-colors = [(200, 0, 0), (0, 200, 0), (0, 0, 200), (200, 200, 0), (0, 200, 200), (200, 0, 200)]
+# le menu selectionner
 menu = "main"
+# si tu veux changer une touche
 binding = False
+# quel touche changer
 name_bind = ""
 # / couleur
 # couleur du fond de l'écran
@@ -33,22 +46,31 @@ couleur_fond = (200, 200, 200)
 texts = []
 # boutons
 boutons = []
+# toute les couleurs
+colors = [(200, 0, 0), (0, 200, 0), (0, 0, 200), (200, 200, 0), (0, 200, 200), (200, 0, 200)]
 # position de la souris
 mouse_pos = ()
 
+# les parametre a utiliser in game
 parametre = file_save["parametre"]
+# parametre modifier
 parametre_no_save = file_save["parametre"]
+# taille de l'ecrans
 screen_size = parametre["screen size"]
+# proportion x et y pour l'adaptation
 propy = screen_size[1] / 1080
 propx = screen_size[0] / 1920
-joueur = [[100, 1000], 10 * propy, 0, 240, 60 * propy, True, False, False]
+# def du joueur = [pos, rayon, vitesse y, vitesse x, double jump, jump, gauche, droite]
+joueur = [[100, 1000], 10 * propy, 0, 240, False, True, False, False]
+# stocke chaque terrain
 all_terrain = file_save["level"]
+# traite le ficher
 for num_lvl in all_terrain:
     for color in all_terrain[num_lvl]:
         for carer in all_terrain[num_lvl][color]:
             all_terrain[num_lvl][color][carer]["pos"] = (all_terrain[num_lvl][color][carer]["rect"][0] * screen_size[0], all_terrain[num_lvl][color][carer]["rect"][1] * screen_size[1], all_terrain[num_lvl][color][carer]["rect"][2] * screen_size[0], all_terrain[num_lvl][color][carer]["rect"][3] * screen_size[1])
             all_terrain[num_lvl][color][carer]["visuel"] = (all_terrain[num_lvl][color][carer]["pos"][0], all_terrain[num_lvl][color][carer]["pos"][1], all_terrain[num_lvl][color][carer]["pos"][2] - all_terrain[num_lvl][color][carer]["pos"][0], all_terrain[num_lvl][color][carer]["pos"][3] - all_terrain[num_lvl][color][carer]["pos"][1])
-# charge les images
+# charge et transforme les images
 Upleftcorner_image = pygame.image.load("image/angle bouton.png")
 Upleftcorner_image = pygame.transform.scale(Upleftcorner_image, (32, 32))
 Uprightcorner_image = pygame.transform.rotate(Upleftcorner_image, -90)
