@@ -151,6 +151,11 @@
           "rect": [0.5, 0.5, 0.6, 0.6],
           "trigger": true,
           "spe": false
+        },
+        "1": {
+          "rect": [0.4, 0.4, 0.5, 0.5],
+          "trigger": false,
+          "spe": false
         }
       }
     },
@@ -161,6 +166,19 @@
           "rect": [0.5, 0.5, 0.6, 0.6],
           "trigger": true,
           "spe": false
+        },
+        "1": {
+          "rect": [0, 0.5, 0.1, 0.6],
+          "trigger": true,
+          "spe": true,
+          "graviter": 1,
+          "tp": [0, 0],
+          "bump": 0,
+          "move": 1,
+          "poss": [[0, 0.5], [0.2, 0.5]],
+          "stape": 1,
+          "speed": 0.4,
+          "exangle": 0
         }
       }
     },
