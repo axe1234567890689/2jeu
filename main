@@ -19,6 +19,7 @@ nb_level = 50
 nb_level_unlock = 20
 bouton_level_size = 116
 marge = 10
+time = 0
 lvl_select = 0
 color_select = 0
 colors = [(200, 0, 0), (0, 200, 0), (0, 0, 200), (200, 200, 0), (0, 200, 200), (200, 0, 200)]
@@ -42,24 +43,32 @@ parametre_no_save = file_save["parametre"]
 screen_size = parametre["screen size"]
 propy = screen_size[1] / 1080
 propx = screen_size[0] / 1920
-joueur = [[100, 1000], 10 * propy, 0, 240, 60 * propy, True, False, False]
+joueur = [[100, 1000], 10 * propy, 0, 240, 60 * propy, True, False, False, True]
 all_terrain = file_save["level"]
 for num_lvl in all_terrain:
+    spawn = False
     for color in all_terrain[num_lvl]:
-        for carer in all_terrain[num_lvl][color]:
-            rect = all_terrain[num_lvl][color][carer]
-            rect["pos"] = [rect["rect"][0] * screen_size[0], rect["rect"][1] * screen_size[1], rect["rect"][2] * screen_size[0], rect["rect"][3] * screen_size[1]]
-            rect["visuel"] = [rect["pos"][0], rect["pos"][1], rect["pos"][2] - rect["pos"][0], rect["pos"][3] - rect["pos"][1]]
-            if rect["spe"]:
-                if rect["move"] != 0:
-                    rect["point"] = []
-                    for p in rect["poss"]:
-                        rect["point"].append([p[0] * screen_size[0], p[1] * screen_size[1]])
-                    rect["cible"] = rect["point"][1]
-                    y = rect["cible"][1] - rect["pos"][1]
-                    x = rect["cible"][0] - rect["pos"][0]
-                    rect["exangle"] = math.atan2(y, x)
+        if color == "spawn":
+            spawn = True
+            all_terrain[num_lvl][color] = [all_terrain[num_lvl][color][0] * screen_size[0], all_terrain[num_lvl][color][1] * screen_size[1]]
+        else:
+            for carer in all_terrain[num_lvl][color]:
+                rect = all_terrain[num_lvl][color][carer]
+                rect["pos"] = [rect["rect"][0] * screen_size[0], rect["rect"][1] * screen_size[1], rect["rect"][2] * screen_size[0], rect["rect"][3] * screen_size[1]]
+                rect["visuel"] = [rect["pos"][0], rect["pos"][1], rect["pos"][2] - rect["pos"][0], rect["pos"][3] - rect["pos"][1]]
+                if rect["spe"]:
+                    if rect["move"] != 0:
+                        rect["point"] = []
+                        for p in rect["poss"]:
+                            rect["point"].append([p[0] * screen_size[0], p[1] * screen_size[1]])
+                        rect["cible"] = rect["point"][1]
+                        y = rect["cible"][1] - rect["pos"][1]
+                        x = rect["cible"][0] - rect["pos"][0]
+                        rect["exangle"] = math.atan2(y, x)
+    if not spawn:
+        all_terrain[num_lvl]["spawn"] = [0.9 * screen_size[0], 0.9 * screen_size[1]]
 # charge les images
+aile_image = pygame.transform.scale(pygame.image.load("image/aile.png"), (110, 110))
 Upleftcorner_image = pygame.image.load("image/angle bouton.png")
 Upleftcorner_image = pygame.transform.scale(Upleftcorner_image, (32, 32))
 Uprightcorner_image = pygame.transform.rotate(Upleftcorner_image, -90)
@@ -75,6 +84,13 @@ boxcornerUpLeft_image = pygame.transform.scale(boxcornerUpLeft_image, (16, 16))
 boxcornerUpRight_image = pygame.transform.rotate(boxcornerUpLeft_image, -90)
 boxcornerDownRight_image = pygame.transform.rotate(boxcornerUpRight_image, -90)
 boxcornerDownLeft_image = pygame.transform.rotate(boxcornerDownRight_image, -90)
+blackHole_image = [pygame.transform.scale(pygame.image.load("image/blackHole.png"), (70, 70))]
+angle = 0
+while angle <= 355:
+    blackHole_image.append(pygame.transform.rotate(blackHole_image[0], -angle))
+    angle += 5
+for image in blackHole_image:
+    image = pygame.transform.scale(image, (70, 70))
 screen = pygame.display.set_mode(screen_size)
 screen_center = (screen_size[0] / 2, screen_size[1] / 2)
 
@@ -110,7 +126,11 @@ def menu_select():
         boutons.append(Boutons.Bouton(f, index + 1, "x", (10, 10), pos2=(50, 50), animable=False))
         boutons[-1].text_pos = (20, 5)
     elif menu == "level":
-        pass
+        joueur[5] = False
+        joueur[6] = False
+        joueur[7] = False
+        joueur[8] = False
+        joueur[0] = all_terrain[str(lvl_select)]["spawn"]
     elif menu == "settings" or menu == "settings pause":
         boutons.append(Boutons.Bouton(f, -1, "", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] + 400, screen_center[1] + 300), only_draw=True))
         boutons.append(Boutons.Bouton(f, 0, "x", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] - 350, screen_center[1] - 250), animable=False))
@@ -258,13 +278,20 @@ def draw_level():
         rect = all_terrain[str(lvl_select)][str(color_select)][index]
         if not rect["spe"]:
             colo = colors[color_select]
-        elif rect["graviter"] != 1:
-            colo = (200, 200, 0)
-        elif rect["tp"] != [0, 0]:
-            colo = (0, 200, 200)
-        elif rect["bump"] != 0:
-            colo = (200, 0, 200)
-        pygame.draw.rect(screen, colo, all_terrain[str(lvl_select)][str(color_select)][index]["visuel"])
+            pygame.draw.rect(screen, colo, all_terrain[str(lvl_select)][str(color_select)][index]["visuel"])
+        elif not rect["blackhole"] > 0 and not rect["aile"]:
+            if rect["graviter"] != 1:
+                colo = (200, 200, 0)
+            elif rect["tp"] != [0, 0]:
+                colo = (0, 200, 200)
+            elif rect["bump"] != 0:
+                colo = (200, 0, 200)
+            pygame.draw.rect(screen, colo, all_terrain[str(lvl_select)][str(color_select)][index]["visuel"])
+        elif rect["blackhole"] > 0:
+            image = blackHole_image[int((-time + 1) * 25)]
+            screen.blit(image, (rect["visuel"][0] - image.get_width() / 2, rect["visuel"][1] - image.get_height() / 2))
+        elif not rect["keep"]:
+            screen.blit(aile_image, (rect["visuel"][0], rect["visuel"][1]))
         if rect["spe"]:
             if rect["move"] != 0:
                 y = rect["cible"][1] - rect["pos"][1]
@@ -292,6 +319,8 @@ def draw_level():
                 rect["visuel"][0] += mx
                 rect["visuel"][1] += my
 
+    if joueur[8]:
+        screen.blit(aile_image, (joueur[0][0] - 55, joueur[0][1] - 70))
     pygame.draw.circle(screen, colors[color_select], joueur[0], joueur[1])
 
 
@@ -419,6 +448,13 @@ def inpute():
                             joueur[2] += 400
                         else:
                             joueur[2] -= 400
+                        joueur[5] = False
+                    elif joueur[8]:
+                        if graviter_variateur < 0:
+                            joueur[2] += 400
+                        else:
+                            joueur[2] -= 400
+                        joueur[8] = False
                 elif event.key == pygame.K_t:
                     joueur[0] = [mouse_pos[0], mouse_pos[1]]
                 if event.key == parametre["touches"]["GAUCHE"]:
@@ -477,6 +513,10 @@ def collision(rect, pos, r):
                         return [pos[0], pos[1] - (recte[1] - pos[1] - r) * -1]
                     else:
                         return [pos[0], pos[1] + (pos[1] - recte[3] - r) * -1]
+                if rect["aile"]:
+                    if not rect["keep"]:
+                        joueur[8] = True
+                        rect["keep"] = True
         if recte[1] < pos[1] < recte[3]:
             if recte[0] - r < pos[0] < recte[0] or recte[2] < pos[0] < recte[2] + r:
                 graviter_variateur = rect["graviter"]
@@ -486,6 +526,10 @@ def collision(rect, pos, r):
                     joueur[2] += rect["bump"]
                 else:
                     joueur[2] -= rect["bump"]
+                if rect["aile"]:
+                    if not rect["keep"]:
+                        joueur[8] = True
+                        rect["keep"] = True
                 if rect["trigger"]:
                     if recte[0] - r < pos[0] < recte[0]:
                         return [pos[0] - (recte[0] - pos[0] - r) * -1, pos[1]]
@@ -493,6 +537,12 @@ def collision(rect, pos, r):
                         return [pos[0] + (pos[0] - recte[2] - r) * -1, pos[1]]
 
     return pos
+
+
+def distcarrer(p1, p2):
+    x = p1[0] - p2[0]
+    y = p1[1] - p2[1]
+    return x * x + y * y
 
 
 def frame_stape(deltatime):
@@ -509,14 +559,26 @@ def frame_stape(deltatime):
     for index in all_terrain["all"][str(color_select)]:
         joueur[0] = collision(all_terrain["all"][str(color_select)][index], joueur[0], joueur[1])
     for index in all_terrain[str(lvl_select)][str(color_select)]:
-        joueur[0] = collision(all_terrain[str(lvl_select)][str(color_select)][index], joueur[0], joueur[1])
+        rect = all_terrain[str(lvl_select)][str(color_select)][index]
+        if not rect["spe"] or rect["blackhole"] == 0:
+            joueur[0] = collision(rect, joueur[0], joueur[1])
+        else:
+            dc = distcarrer(joueur[0], (rect["visuel"][0], rect["visuel"][1]))
+            angle = math.atan2(joueur[0][1] - rect["visuel"][1], joueur[0][0] - rect["visuel"][0])
+            force = rect["blackhole"] / dc
+            joueur[0][0] -= math.cos(angle) * force
+            joueur[2] -= math.sin(angle) * force
     if not expos == joueur[0][1]:
         joueur[2] = 0
+        joueur[5] = True
 
 
 menu_select()
 while True:
     deltatime = clock.tick() / 1000
+    time += deltatime
+    if time >= 3:
+        time -= 3
 
     affichage()
     if menu == "level":
