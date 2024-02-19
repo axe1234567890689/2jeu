@@ -47,17 +47,18 @@ all_terrain = file_save["level"]
 for num_lvl in all_terrain:
     for color in all_terrain[num_lvl]:
         for carer in all_terrain[num_lvl][color]:
-            all_terrain[num_lvl][color][carer]["pos"] = [all_terrain[num_lvl][color][carer]["rect"][0] * screen_size[0], all_terrain[num_lvl][color][carer]["rect"][1] * screen_size[1], all_terrain[num_lvl][color][carer]["rect"][2] * screen_size[0], all_terrain[num_lvl][color][carer]["rect"][3] * screen_size[1]]
-            all_terrain[num_lvl][color][carer]["visuel"] = [all_terrain[num_lvl][color][carer]["pos"][0], all_terrain[num_lvl][color][carer]["pos"][1], all_terrain[num_lvl][color][carer]["pos"][2] - all_terrain[num_lvl][color][carer]["pos"][0], all_terrain[num_lvl][color][carer]["pos"][3] - all_terrain[num_lvl][color][carer]["pos"][1]]
-            if all_terrain[num_lvl][color][carer]["spe"]:
-                if all_terrain[num_lvl][color][carer]["move"] != 0:
-                    all_terrain[num_lvl][color][carer]["point"] = []
-                    for p in all_terrain[num_lvl][color][carer]["poss"]:
-                        all_terrain[num_lvl][color][carer]["point"].append([p[0] * screen_size[0], p[1] * screen_size[1]])
-                    all_terrain[num_lvl][color][carer]["cible"] = all_terrain[num_lvl][color][carer]["point"][1]
-                    y = all_terrain[num_lvl][color][carer]["cible"][1] - all_terrain[num_lvl][color][carer]["pos"][1]
-                    x = all_terrain[num_lvl][color][carer]["cible"][0] - all_terrain[num_lvl][color][carer]["pos"][0]
-                    all_terrain[num_lvl][color][carer]["exangle"] = math.atan2(y, x)
+            rect = all_terrain[num_lvl][color][carer]
+            rect["pos"] = [rect["rect"][0] * screen_size[0], rect["rect"][1] * screen_size[1], rect["rect"][2] * screen_size[0], rect["rect"][3] * screen_size[1]]
+            rect["visuel"] = [rect["pos"][0], rect["pos"][1], rect["pos"][2] - rect["pos"][0], rect["pos"][3] - rect["pos"][1]]
+            if rect["spe"]:
+                if rect["move"] != 0:
+                    rect["point"] = []
+                    for p in rect["poss"]:
+                        rect["point"].append([p[0] * screen_size[0], p[1] * screen_size[1]])
+                    rect["cible"] = rect["point"][1]
+                    y = rect["cible"][1] - rect["pos"][1]
+                    x = rect["cible"][0] - rect["pos"][0]
+                    rect["exangle"] = math.atan2(y, x)
 # charge les images
 Upleftcorner_image = pygame.image.load("image/angle bouton.png")
 Upleftcorner_image = pygame.transform.scale(Upleftcorner_image, (32, 32))
