@@ -1,9 +1,10 @@
 # // import des bibliothèque
-import math
 
+import math
 import pygame
 import json
 from classs import Boutons
+from classs import slider as SL
 
 # // variables
 # créer la fenêtre
@@ -15,35 +16,42 @@ clock = pygame.time.Clock()
 # le temp entre deux refresh de screen
 file_save = json.loads(open("save.json", "r").read())
 deltatime = 0
-nb_level = 50
-nb_level_unlock = 20
 bouton_level_size = 116
 marge = 10
 time = 0
 lvl_select = 0
 color_select = 0
-colors = [(200, 0, 0), (0, 200, 0), (0, 0, 200), (200, 200, 0), (0, 200, 200), (200, 0, 200)]
+nb_carer = 0
+carer_select = -1
+precision = 10
+nb_click = 0
+click_gauche = False
+pos_click1 = (-1, -1)
 menu = "main"
 binding = False
+show = True
 graviter_variateur = 1
 name_bind = ""
 # / couleur
 # couleur du fond de l'écran
 couleur_fond = (200, 200, 200)
+colors = [(200, 0, 0), (0, 200, 0), (0, 0, 200), (200, 200, 0), (0, 200, 200), (200, 0, 200)]
 # / list
 # texts à afficher chaque frames
 texts = []
 # boutons
 boutons = []
+sliders = []
 # position de la souris
 mouse_pos = ()
 
 parametre = file_save["parametre"]
 parametre_no_save = file_save["parametre"]
+nb_level = parametre["nb level"]
 screen_size = parametre["screen size"]
 propy = screen_size[1] / 1080
 propx = screen_size[0] / 1920
-joueur = [[100, 1000], 10 * propy, 0, 240, 60 * propy, True, False, False, True]
+joueur = [[-1, -1], 10 * propy, 0, 240, 60 * propy, False, False, False, False]
 all_terrain = file_save["level"]
 for num_lvl in all_terrain:
     spawn = False
@@ -56,6 +64,9 @@ for num_lvl in all_terrain:
                 rect = all_terrain[num_lvl][color][carer]
                 rect["pos"] = [rect["rect"][0] * screen_size[0], rect["rect"][1] * screen_size[1], rect["rect"][2] * screen_size[0], rect["rect"][3] * screen_size[1]]
                 rect["visuel"] = [rect["pos"][0], rect["pos"][1], rect["pos"][2] - rect["pos"][0], rect["pos"][3] - rect["pos"][1]]
+                if rect["spe"] and rect["aile"]:
+                    rect["visuel"] = [rect["pos"][0], rect["pos"][1], 110, 110]
+                    rect["pos"] = [rect["rect"][0] * screen_size[0], rect["rect"][1] * screen_size[1], rect["rect"][0] * screen_size[0] + 110, rect["rect"][1] * screen_size[1] + 110]
                 if rect["spe"]:
                     if rect["move"] != 0:
                         rect["point"] = []
@@ -99,10 +110,12 @@ screen_center = (screen_size[0] / 2, screen_size[1] / 2)
 
 # permet de charger les elements d'un menu précis
 def menu_select():
-    global menu
+    global menu, show, sliders, carer_select, joueur
     boutons.clear()
     texts.clear()
+    sliders.clear()
     if menu == "main":
+        boutons.append(Boutons.Bouton(f, 4, "EDITEUR DE NIVEAUX", (500, screen_size[1] - 600), screen_size[0]))
         boutons.append(Boutons.Bouton(f, 1, "SELECT LEVEL", (500, screen_size[1] - 450), screen_size[0]))
         boutons.append(Boutons.Bouton(f, 2, "SETTINGS", (500, screen_size[1] - 300), screen_size[0]))
         boutons.append(Boutons.Bouton(f, 3, "QUIT", (500, screen_size[1] - 150), screen_size[0]))
@@ -125,12 +138,8 @@ def menu_select():
                     boutons.append(Boutons.Bouton(f, index, text, (x * (bouton_level_size + marge) + rest, y * (bouton_level_size + marge) + rest + 60), pos2=(x * (bouton_level_size + marge) + bouton_level_size + rest, y * (bouton_level_size + marge) + bouton_level_size + rest + 60)))
         boutons.append(Boutons.Bouton(f, index + 1, "x", (10, 10), pos2=(50, 50), animable=False))
         boutons[-1].text_pos = (20, 5)
-    elif menu == "level":
-        joueur[5] = False
-        joueur[6] = False
-        joueur[7] = False
-        joueur[8] = False
-        joueur[0] = all_terrain[str(lvl_select)]["spawn"]
+    elif menu == "level" or menu == "test":
+        joueur = [[all_terrain[str(lvl_select)]["spawn"][0], all_terrain[str(lvl_select)]["spawn"][1]], 10 * propy, 0, 240, 60 * propy, False, False, False, False]
     elif menu == "settings" or menu == "settings pause":
         boutons.append(Boutons.Bouton(f, -1, "", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] + 400, screen_center[1] + 300), only_draw=True))
         boutons.append(Boutons.Bouton(f, 0, "x", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] - 350, screen_center[1] - 250), animable=False))
@@ -160,6 +169,13 @@ def menu_select():
         boutons.append(Boutons.Bouton(f, 2, "QUIT", (screen_center[0], screen_center[1] + 150), screen_size[0]))
         boutons.append(Boutons.Bouton(f, 3, "SETTINGS", (screen_center[0], screen_center[1] - 100), screen_size[0]))
         boutons.append(Boutons.Bouton(f, 4, "LEVEL SELECTOR", (screen_center[0], screen_center[1] - 225), screen_size[0]))
+    elif menu == "editeur":
+        show = True
+        carer_select = -1
+        joueur = [[-1, -1], 10 * propy, 0, 240, 60 * propy, False, False, False, False]
+        boutons.append(Boutons.Bouton(f, 0, "QUITTER", (20, screen_size[1] - 123)))
+        QUITTER = f.render("QUITTER", False, (0, 0, 0))
+        boutons.append(Boutons.Bouton(f, 1, "TESTER", (QUITTER.get_width() + 150, screen_size[1] - 123)))
 
 
 # affiche un text sur la fenêtre
@@ -173,96 +189,113 @@ def afficher_text(text, couleur, pos, taille):
 def affichage():
     screen.fill(couleur_fond)
 
-    if menu == "level" or menu == "pause" or menu == "settings pause":
+    if menu == "level" or menu == "pause" or menu == "settings pause" or menu == "test" or menu == "editeur":
         draw_level()
 
-    for bouton in boutons:
-        if bouton.animate:
-            if bouton.is_select:
-                prop = bouton.temp_passer / bouton.temp_animation
-            else:
-                prop = -bouton.temp_passer / bouton.temp_animation + 1
-            screen.blit(Upleftcorner_image, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
-                                             transition(bouton.pos1[1], bouton.pos1[1] + 10, prop)))
-            screen.blit(Downrightcorner_image, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 32,
-                                                transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 32))
-            screen.blit(Uprightcorner_image, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 32,
-                                              transition(bouton.pos1[1], bouton.pos1[1] + 10, prop)))
-            screen.blit(Downleftcorner_image, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
-                                               transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 32))
-            prop = -prop + 1
-            screen.blit(boxcornerUpLeft_image, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
-                                                transition(bouton.pos1[1], bouton.pos1[1] + 10, prop)))
-            screen.blit(boxcornerUpRight_image, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 16,
+    if menu == "editeur":
+        for x in range(int(screen_size[0] / precision)):
+            for y in range(int(screen_size[1] / precision)):
+                pygame.draw.rect(screen, (255, 255, 255), (x * precision, y * precision, 1, 1))
+        pygame.draw.circle(screen, (0, 0, 0), all_terrain[str(lvl_select)]["spawn"], 10)
+
+    if pos_click1 != (-1, -1):
+        mp = [int(mouse_pos[0] / precision) * precision, int(mouse_pos[1] / precision) * precision]
+        minx = min(mp[0], pos_click1[0])
+        miny = min(mp[1], pos_click1[1])
+        maxx = max(mp[0], pos_click1[0])
+        maxy = max(mp[1], pos_click1[1])
+        pygame.draw.rect(screen, colors[color_select], [minx, miny, maxx - minx, maxy - miny])
+
+    if show or not menu == "editeur":
+        for bouton in boutons:
+            if bouton.animate:
+                if bouton.is_select:
+                    prop = bouton.temp_passer / bouton.temp_animation
+                else:
+                    prop = -bouton.temp_passer / bouton.temp_animation + 1
+                screen.blit(Upleftcorner_image, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
                                                  transition(bouton.pos1[1], bouton.pos1[1] + 10, prop)))
-            screen.blit(boxcornerDownRight_image, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 16,
-                                                   transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 16))
-            screen.blit(boxcornerDownLeft_image, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
-                                                  transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 16))
+                screen.blit(Downrightcorner_image, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 32,
+                                                    transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 32))
+                screen.blit(Uprightcorner_image, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 32,
+                                                  transition(bouton.pos1[1], bouton.pos1[1] + 10, prop)))
+                screen.blit(Downleftcorner_image, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
+                                                   transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 32))
+                prop = -prop + 1
+                screen.blit(boxcornerUpLeft_image, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
+                                                    transition(bouton.pos1[1], bouton.pos1[1] + 10, prop)))
+                screen.blit(boxcornerUpRight_image, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 16,
+                                                     transition(bouton.pos1[1], bouton.pos1[1] + 10, prop)))
+                screen.blit(boxcornerDownRight_image, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 16,
+                                                       transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 16))
+                screen.blit(boxcornerDownLeft_image, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
+                                                      transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 16))
 
-            c = [transition(0, 20, prop) - 1]
+                c = [transition(0, 20, prop) - 1]
 
-            bore = pygame.transform.scale(borehaut_image, ((bouton.pos2[0] - bouton.pos1[0]) - 32 - c[0], 16))
-            screen.blit(bore, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop) + 16,
-                               transition(bouton.pos1[1], bouton.pos1[1] + 10, prop)))
-            bore = pygame.transform.scale(borebas_image, ((bouton.pos2[0] - bouton.pos1[0]) - 32 - c[0], 16))
-            screen.blit(bore, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop) + 16,
-                               transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 16))
-            bore = pygame.transform.scale(boregauche_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 32 - c[0]))
-            screen.blit(bore, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
-                               transition(bouton.pos1[1], bouton.pos1[1] + 10, prop) + 16))
-            bore = pygame.transform.scale(boredroite_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 32 - c[0]))
-            screen.blit(bore, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 16,
-                               transition(bouton.pos1[1], bouton.pos1[1] + 10, prop) + 16))
+                bore = pygame.transform.scale(borehaut_image, ((bouton.pos2[0] - bouton.pos1[0]) - 32 - c[0], 16))
+                screen.blit(bore, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop) + 16,
+                                   transition(bouton.pos1[1], bouton.pos1[1] + 10, prop)))
+                bore = pygame.transform.scale(borebas_image, ((bouton.pos2[0] - bouton.pos1[0]) - 32 - c[0], 16))
+                screen.blit(bore, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop) + 16,
+                                   transition(bouton.pos2[1], bouton.pos2[1] - 10, prop) - 16))
+                bore = pygame.transform.scale(boregauche_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 32 - c[0]))
+                screen.blit(bore, (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop),
+                                   transition(bouton.pos1[1], bouton.pos1[1] + 10, prop) + 16))
+                bore = pygame.transform.scale(boredroite_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 32 - c[0]))
+                screen.blit(bore, (transition(bouton.pos2[0], bouton.pos2[0] - 10, prop) - 16,
+                                   transition(bouton.pos1[1], bouton.pos1[1] + 10, prop) + 16))
 
-            pygame.draw.rect(screen, (255, 158, 109), (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop) + 16,
-                                                       transition(bouton.pos1[1], bouton.pos1[1] + 10, prop) + 16,
-                                                       (bouton.pos2[0] - bouton.pos1[0]) - 32 - c[0],
-                                                       (bouton.pos2[1] - bouton.pos1[1]) - 32 - c[0]))
-        else:
-            if bouton.is_select and bouton.animable:
-                screen.blit(Upleftcorner_image, bouton.pos1)
-                screen.blit(Downrightcorner_image, (bouton.pos2[0] - 32, bouton.pos2[1] - 32))
-                screen.blit(Uprightcorner_image, (bouton.pos2[0] - 32, bouton.pos1[1]))
-                screen.blit(Downleftcorner_image, (bouton.pos1[0], bouton.pos2[1] - 32))
-
-                screen.blit(boxcornerUpLeft_image, (bouton.pos1[0] + 10, bouton.pos1[1] + 10))
-                screen.blit(boxcornerUpRight_image, (bouton.pos2[0] - 26, bouton.pos1[1] + 10))
-                screen.blit(boxcornerDownRight_image, (bouton.pos2[0] - 26, bouton.pos2[1] - 26))
-                screen.blit(boxcornerDownLeft_image, (bouton.pos1[0] + 10, bouton.pos2[1] - 26))
-
-                bore = pygame.transform.scale(borehaut_image, ((bouton.pos2[0] - bouton.pos1[0]) - 52, 16))
-                screen.blit(bore, (bouton.pos1[0] + 26, bouton.pos1[1] + 10))
-                bore = pygame.transform.scale(borebas_image, ((bouton.pos2[0] - bouton.pos1[0]) - 52, 16))
-                screen.blit(bore, (bouton.pos1[0] + 26, bouton.pos2[1] - 26))
-                bore = pygame.transform.scale(boregauche_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 52))
-                screen.blit(bore, (bouton.pos1[0] + 10, bouton.pos1[1] + 26))
-                bore = pygame.transform.scale(boredroite_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 52))
-                screen.blit(bore, (bouton.pos2[0] - 26, bouton.pos1[1] + 26))
-
-                pygame.draw.rect(screen, (255, 158, 109), (
-                bouton.pos1[0] + 26, bouton.pos1[1] + 26, (bouton.pos2[0] - bouton.pos1[0]) - 52,
-                (bouton.pos2[1] - bouton.pos1[1]) - 52))
+                pygame.draw.rect(screen, (255, 158, 109), (transition(bouton.pos1[0], bouton.pos1[0] + 10, prop) + 16,
+                                                           transition(bouton.pos1[1], bouton.pos1[1] + 10, prop) + 16,
+                                                           (bouton.pos2[0] - bouton.pos1[0]) - 32 - c[0],
+                                                           (bouton.pos2[1] - bouton.pos1[1]) - 32 - c[0]))
             else:
-                screen.blit(boxcornerUpLeft_image, bouton.pos1)
-                screen.blit(boxcornerUpRight_image, (bouton.pos2[0] - 16, bouton.pos1[1]))
-                screen.blit(boxcornerDownLeft_image, (bouton.pos1[0], bouton.pos2[1] - 16))
-                screen.blit(boxcornerDownRight_image, (bouton.pos2[0] - 16, bouton.pos2[1] - 16))
+                if bouton.is_select and bouton.animable:
+                    screen.blit(Upleftcorner_image, bouton.pos1)
+                    screen.blit(Downrightcorner_image, (bouton.pos2[0] - 32, bouton.pos2[1] - 32))
+                    screen.blit(Uprightcorner_image, (bouton.pos2[0] - 32, bouton.pos1[1]))
+                    screen.blit(Downleftcorner_image, (bouton.pos1[0], bouton.pos2[1] - 32))
 
-                bore = pygame.transform.scale(borehaut_image, ((bouton.pos2[0] - bouton.pos1[0]) - 32, 16))
-                screen.blit(bore, (bouton.pos1[0] + 16, bouton.pos1[1]))
-                bore = pygame.transform.scale(borebas_image, ((bouton.pos2[0] - bouton.pos1[0]) - 32, 16))
-                screen.blit(bore, (bouton.pos1[0] + 16, bouton.pos2[1] - 16))
-                bore = pygame.transform.scale(boregauche_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 32))
-                screen.blit(bore, (bouton.pos1[0], bouton.pos1[1] + 16))
-                bore = pygame.transform.scale(boredroite_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 32))
-                screen.blit(bore, (bouton.pos2[0] - 16, bouton.pos1[1] + 16))
+                    screen.blit(boxcornerUpLeft_image, (bouton.pos1[0] + 10, bouton.pos1[1] + 10))
+                    screen.blit(boxcornerUpRight_image, (bouton.pos2[0] - 26, bouton.pos1[1] + 10))
+                    screen.blit(boxcornerDownRight_image, (bouton.pos2[0] - 26, bouton.pos2[1] - 26))
+                    screen.blit(boxcornerDownLeft_image, (bouton.pos1[0] + 10, bouton.pos2[1] - 26))
 
-                pygame.draw.rect(screen, (255, 158, 109), (
-                bouton.pos1[0] + 16, bouton.pos1[1] + 16, (bouton.pos2[0] - bouton.pos1[0]) - 32,
-                (bouton.pos2[1] - bouton.pos1[1]) - 32))
+                    bore = pygame.transform.scale(borehaut_image, ((bouton.pos2[0] - bouton.pos1[0]) - 52, 16))
+                    screen.blit(bore, (bouton.pos1[0] + 26, bouton.pos1[1] + 10))
+                    bore = pygame.transform.scale(borebas_image, ((bouton.pos2[0] - bouton.pos1[0]) - 52, 16))
+                    screen.blit(bore, (bouton.pos1[0] + 26, bouton.pos2[1] - 26))
+                    bore = pygame.transform.scale(boregauche_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 52))
+                    screen.blit(bore, (bouton.pos1[0] + 10, bouton.pos1[1] + 26))
+                    bore = pygame.transform.scale(boredroite_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 52))
+                    screen.blit(bore, (bouton.pos2[0] - 26, bouton.pos1[1] + 26))
 
-        screen.blit(bouton.text, bouton.text_pos)
+                    pygame.draw.rect(screen, (255, 158, 109), (
+                    bouton.pos1[0] + 26, bouton.pos1[1] + 26, (bouton.pos2[0] - bouton.pos1[0]) - 52,
+                    (bouton.pos2[1] - bouton.pos1[1]) - 52))
+                else:
+                    screen.blit(boxcornerUpLeft_image, bouton.pos1)
+                    screen.blit(boxcornerUpRight_image, (bouton.pos2[0] - 16, bouton.pos1[1]))
+                    screen.blit(boxcornerDownLeft_image, (bouton.pos1[0], bouton.pos2[1] - 16))
+                    screen.blit(boxcornerDownRight_image, (bouton.pos2[0] - 16, bouton.pos2[1] - 16))
+
+                    bore = pygame.transform.scale(borehaut_image, ((bouton.pos2[0] - bouton.pos1[0]) - 32, 16))
+                    screen.blit(bore, (bouton.pos1[0] + 16, bouton.pos1[1]))
+                    bore = pygame.transform.scale(borebas_image, ((bouton.pos2[0] - bouton.pos1[0]) - 32, 16))
+                    screen.blit(bore, (bouton.pos1[0] + 16, bouton.pos2[1] - 16))
+                    bore = pygame.transform.scale(boregauche_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 32))
+                    screen.blit(bore, (bouton.pos1[0], bouton.pos1[1] + 16))
+                    bore = pygame.transform.scale(boredroite_image, (16, (bouton.pos2[1] - bouton.pos1[1]) - 32))
+                    screen.blit(bore, (bouton.pos2[0] - 16, bouton.pos1[1] + 16))
+
+                    pygame.draw.rect(screen, (255, 158, 109), (
+                    bouton.pos1[0] + 16, bouton.pos1[1] + 16, (bouton.pos2[0] - bouton.pos1[0]) - 32,
+                    (bouton.pos2[1] - bouton.pos1[1]) - 32))
+
+            screen.blit(bouton.text, bouton.text_pos)
+    for Slider in sliders:
+        Slider.draw(screen)
 
     for text in texts:
         afficher_text(text[0], text[1], text[2], text[3])
@@ -321,7 +354,8 @@ def draw_level():
 
     if joueur[8]:
         screen.blit(aile_image, (joueur[0][0] - 55, joueur[0][1] - 70))
-    pygame.draw.circle(screen, colors[color_select], joueur[0], joueur[1])
+    if show or not menu == "editeur":
+        pygame.draw.circle(screen, colors[color_select], joueur[0], joueur[1])
 
 
 # permet de connaitre une position pendant une transition
@@ -336,7 +370,7 @@ def save_setting():
 
 
 def bouton_action(select):
-    global menu, lvl_select, binding, name_bind, color_select
+    global menu, lvl_select, binding, name_bind, color_select, nb_level
     if menu == "main":
         if select == 1:
             menu = "level selector"
@@ -344,6 +378,14 @@ def bouton_action(select):
         elif select == 2:
             menu = "settings"
             menu_select()
+        elif select == 4:
+            menu = "editeur"
+            menu_select()
+            nb_level += 1
+            lvl_select = nb_level
+            color_select = 0
+            all_terrain[str(nb_level)] = {"0": {}, "1": {}, "2": {}, "3": {}, "4": {}, "5": {}, "spawn": [100, 100]}
+            color_select = 0
         elif select == 3:
             quite()
     elif menu == "level selector":
@@ -406,19 +448,43 @@ def bouton_action(select):
         if select == 0:
             menu = "settings pause"
             menu_select()
+    elif menu == "editeur":
+        if select == 0:
+            menu = "main"
+            menu_select()
+        elif select == 1:
+            menu = "test"
+            menu_select()
+        else:
+            rect = all_terrain[str(lvl_select)][str(color_select)][carer_select]
+            if select == 2:
+                rect["trigger"] = not rect["trigger"]
+                text = "NON"
+                if rect["trigger"]:
+                    text = "OUI"
+                f = pygame.font.SysFont("arial", 30)
+                boutons[2].text = f.render(text, False, (0, 0, 0))
+            elif select == 3:
+                rect["spe"] = not rect["spe"]
+                text = "NON"
+                if rect["spe"]:
+                    text = "OUI"
+                f = pygame.font.SysFont("arial", 30)
+                boutons[3].text = f.render(text, False, (0, 0, 0))
 
 
 def inpute():
-    global mouse_pos, deltatime, menu, binding, color_select, joueur
+    global mouse_pos, deltatime, menu, binding, color_select, joueur, show, click_gauche, nb_click, pos_click1, nb_carer, carer_select
     mouse_pos = pygame.mouse.get_pos()
 
     select = -1
-    for bouton in boutons:
-        if not bouton.only_draw:
-            selectint = bouton.is_trigger(mouse_pos)
-            if selectint is not None:
-                select = selectint
-            bouton.stape(deltatime)
+    if not menu == "editeur" or show:
+        for bouton in boutons:
+            if not bouton.only_draw:
+                selectint = bouton.is_trigger(mouse_pos)
+                if selectint is not None:
+                    select = selectint
+                bouton.stape(deltatime)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -428,10 +494,14 @@ def inpute():
                 parametre_no_save["touches"][name_bind] = event.key
                 menu_select()
                 binding = False
-            elif menu == "level":
+            elif menu == "level" or menu == "test":
                 if event.key == parametre["touches"]["PAUSE"]:
-                    menu = "pause"
-                    menu_select()
+                    if menu == "level":
+                        menu = "pause"
+                        menu_select()
+                    else:
+                        menu = "editeur"
+                        menu_select()
                 elif event.key == parametre["touches"]["AVANCER DANS LES COULEURS"]:
                     color_select += 1
                     if color_select >= 6:
@@ -461,8 +531,21 @@ def inpute():
                     joueur[7] = True
                 if event.key == parametre["touches"]["DROITE"]:
                     joueur[6] = True
+            elif menu == "editeur":
+                if event.key == pygame.K_TAB:
+                    show = not show
+                elif event.key == parametre["touches"]["AVANCER DANS LES COULEURS"]:
+                    color_select += 1
+                    if color_select >= 6:
+                        color_select -= 6
+                    if color_select > lvl_select:
+                        color_select -= (lvl_select + 1)
+                elif event.key == parametre["touches"]["RECULER DANS LES COULEURS"]:
+                    color_select -= 1
+                    if color_select < 0:
+                        color_select += min((lvl_select + 1), 6)
         elif event.type == pygame.KEYUP:
-            if menu == "level":
+            if menu == "level" or menu == "test":
                 if event.key == parametre["touches"]["GAUCHE"]:
                     joueur[7] = False
                 if event.key == parametre["touches"]["DROITE"]:
@@ -470,6 +553,58 @@ def inpute():
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1 and select != -1 and select is not None:
                 bouton_action(select)
+            elif event.button == 1:
+                click_gauche = True
+                nb_click = 0
+                for Slider in sliders:
+                    if Slider.click(mouse_pos):
+                        nb_click = Slider.nb
+                carer_select = -1
+                for carer in all_terrain[str(lvl_select)][str(color_select)]:
+                    rect = all_terrain[str(lvl_select)][str(color_select)][carer]["pos"]
+                    if rect[0] <= mouse_pos[0] <= rect[2] and rect[1] <= mouse_pos[1] <= rect[3]:
+                        rect = all_terrain[str(lvl_select)][str(color_select)][carer]
+                        carer_select = carer
+                        f = pygame.font.SysFont("arial", 30)
+                        t = f.render("traversable", False, (0, 0, 0))
+                        texts.append(["traversable", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 10), 30])
+                        text = "OUI"
+                        if not rect["trigger"]:
+                            text = "NON"
+                        boutons.append(Boutons.Bouton(f, 2, text, (screen_size[0] - 150, 0), pos2=(screen_size[0] - 50, 60)))
+                        boutons[-1].text_pos = (screen_size[0] - 130, 15)
+                        t = f.render("speciale", False, (0, 0, 0))
+                        texts.append(["speciale", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 50), 30])
+                        text = "OUI"
+                        if not rect["spe"]:
+                            text = "NON"
+                        boutons.append(Boutons.Bouton(f, 3, text, (screen_size[0] - 150, 80), pos2=(screen_size[0] - 50, 140)))
+                        boutons[-1].text_pos = (screen_size[0] - 130, 95)
+                        if rect["spe"]:
+                            t = f.render("changement", False, (0, 0, 0))
+                            texts.append(["changement", (0, 0, 0), (screen_size[0] - t.get_width() - 50, 100), 30])
+                            t = f.render("de graviter", False, (0, 0, 0))
+                            texts.append(["de graviter", (0, 0, 0), (screen_size[0] - t.get_width() - 50, 120), 30])
+                            sliders.append(SL.Slider((screen_size[0] - t.get_width() - 200, 140), 10, (200, 200, 200), (100, 100, 100), (0, 0, 0), -10, 10, 10, 1))
+                if nb_click == 0 and menu == "editeur" and carer_select == -1:
+                    if pos_click1 == (-1, -1):
+                        pos_click1 = [int(mouse_pos[0] / precision) * precision, int(mouse_pos[1] / precision) * precision]
+                    else:
+                        mp = [int(mouse_pos[0] / precision) * 10, int(mouse_pos[1] / precision) * 10]
+                        minx = min(mp[0], pos_click1[0])
+                        miny = min(mp[1], pos_click1[1])
+                        maxx = max(mp[0], pos_click1[0])
+                        maxy = max(mp[1], pos_click1[1])
+                        all_terrain[str(lvl_select)][str(color_select)][str(nb_carer)] = {"rect": [minx / screen_size[0], miny / screen_size[1], maxx / screen_size[0], maxy / screen_size[1]], "pos": [minx, miny, maxx, maxy], "visuel": [minx, miny, maxx - minx, maxy - miny], "trigger": True, "spe": False}
+                        nb_carer += 1
+                        pos_click1 = (-1, -1)
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                click_gauche = False
+    if click_gauche and not nb_click == 0:
+        for slider in sliders:
+            if slider.nb == nb_click:
+                slider.calcule(mouse_pos[0])
 
 
 # tout est dans le nom
@@ -508,11 +643,6 @@ def collision(rect, pos, r):
                     joueur[2] += rect["bump"]
                 else:
                     joueur[2] -= rect["bump"]
-                if rect["trigger"]:
-                    if recte[1] - r < pos[1] < recte[1]:
-                        return [pos[0], pos[1] - (recte[1] - pos[1] - r) * -1]
-                    else:
-                        return [pos[0], pos[1] + (pos[1] - recte[3] - r) * -1]
                 if rect["aile"]:
                     if not rect["keep"]:
                         joueur[8] = True
@@ -530,11 +660,6 @@ def collision(rect, pos, r):
                     if not rect["keep"]:
                         joueur[8] = True
                         rect["keep"] = True
-                if rect["trigger"]:
-                    if recte[0] - r < pos[0] < recte[0]:
-                        return [pos[0] - (recte[0] - pos[0] - r) * -1, pos[1]]
-                    else:
-                        return [pos[0] + (pos[0] - recte[2] - r) * -1, pos[1]]
 
     return pos
 
@@ -565,7 +690,7 @@ def frame_stape(deltatime):
         else:
             dc = distcarrer(joueur[0], (rect["visuel"][0], rect["visuel"][1]))
             angle = math.atan2(joueur[0][1] - rect["visuel"][1], joueur[0][0] - rect["visuel"][0])
-            force = rect["blackhole"] / dc
+            force = min(rect["blackhole"] / dc, 50)
             joueur[0][0] -= math.cos(angle) * force
             joueur[2] -= math.sin(angle) * force
     if not expos == joueur[0][1]:
@@ -581,6 +706,6 @@ while True:
         time -= 3
 
     affichage()
-    if menu == "level":
+    if menu == "level" or menu == "test":
         frame_stape(deltatime)
     inpute()
