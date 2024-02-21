@@ -1,4 +1,5 @@
 # // import des bibliothèque
+
 import copy
 import math
 import pygame
@@ -33,6 +34,7 @@ binding = False
 show = True
 spawnPoint = False
 movepoint = False
+fin = False
 graviter_variateur = 1
 name_bind = ""
 # / couleur
@@ -58,13 +60,9 @@ joueur = [[-1, -1], 10 * propy, 0, 240, 60 * propy, False, False, False, False]
 all_terrain = file_save["level"]
 for num_lvl in all_terrain:
     spawn = False
-    obj = False
     for color in all_terrain[num_lvl]:
         if color == "spawn":
             spawn = True
-            all_terrain[num_lvl][color] = [all_terrain[num_lvl][color][0] * screen_size[0], all_terrain[num_lvl][color][1] * screen_size[1]]
-        elif color == "objectif":
-            obj = True
             all_terrain[num_lvl][color] = [all_terrain[num_lvl][color][0] * screen_size[0], all_terrain[num_lvl][color][1] * screen_size[1]]
         else:
             for carer in all_terrain[num_lvl][color]:
@@ -85,8 +83,6 @@ for num_lvl in all_terrain:
                         rect["exangle"] = math.atan2(y, x)
     if not spawn:
         all_terrain[num_lvl]["spawn"] = [0.9 * screen_size[0], 0.9 * screen_size[1]]
-    if not obj:
-        all_terrain[num_lvl]["objectif"] = [0.9 * screen_size[0], 0.9 * screen_size[1], screen_size[0], screen_size[1]]
 # charge les images
 aile_image = pygame.transform.scale(pygame.image.load("image/aile.png"), (110, 110))
 Upleftcorner_image = pygame.image.load("image/angle bouton.png")
@@ -119,7 +115,7 @@ screen_center = (screen_size[0] / 2, screen_size[1] / 2)
 
 # permet de charger les elements d'un menu précis
 def menu_select():
-    global menu, show, sliders, carer_select, joueur, graviter_variateur
+    global menu, show, sliders, carer_select, joueur, graviter_variateur, lvl_select
     boutons.clear()
     texts.clear()
     sliders.clear()
@@ -148,7 +144,7 @@ def menu_select():
         boutons.append(Boutons.Bouton(f, index + 1, "x", (10, 10), pos2=(50, 50), animable=False))
         boutons[-1].text_pos = (20, 5)
     elif menu == "level" or menu == "test":
-        joueur = [[all_terrain[str(lvl_select)]["spawn"][0], all_terrain[str(lvl_select)]["spawn"][1]], 10 * propy, 0, 240, 60 * propy, False, False, False, False]
+        joueur = [copy.copy(all_terrain[str(lvl_select)]["spawn"]), 10 * propy, 0, 240, 60 * propy, False, False, False, False]
         graviter_variateur = 1
         for color in all_terrain[str(lvl_select)]:
             if not color == "spawn" and not color == "objectif":
@@ -248,11 +244,10 @@ def affichage(deltatime):
                 rect = all_terrain[str(lvl_select)][str(color_select)][str(carer_select)]
                 if rect["spe"]:
                     if rect["tp"] != [0, 0]:
-                        pygame.draw.circle(screen, colors[color_select], rect["tp"], 10)
+                        pygame.draw.circle(screen, colors[color_select], [rect["tp"][0] * screen_size[0], rect["tp"][1] * screen_size[1]], 10)
                     elif rect["move"]:
                         if movepoint:
                             pygame.draw.circle(screen, (0, 0, 0), [int((mouse_pos[0] + precision / 2) / precision) * precision, int((mouse_pos[1] + precision / 2) / precision) * precision], 10)
-
 
     if show or not menu == "editeur":
         for bouton in boutons:
@@ -435,10 +430,10 @@ def bouton_action(select):
         elif select == 4:
             menu = "editeur"
             menu_select()
-            nb_level += 1
             lvl_select = nb_level
+            nb_level += 1
             color_select = 0
-            all_terrain[str(nb_level)] = {"0": {}, "1": {}, "2": {}, "3": {}, "4": {}, "5": {}, "spawn": [100, 100]}
+            all_terrain[str(lvl_select)] = {"0": {}, "1": {}, "2": {}, "3": {}, "4": {}, "5": {}, "spawn": [100, 100]}
             color_select = 0
         elif select == 3:
             quite()
@@ -448,9 +443,9 @@ def bouton_action(select):
             menu_select()
         else:
             menu = "level"
-            menu_select()
             lvl_select = select - 1
             color_select = 0
+            menu_select()
     elif menu == "level":
         menu = "main"
         menu_select()
@@ -823,7 +818,7 @@ def inpute():
                                 if pos_click1 == (-1, -1):
                                     pos_click1 = [int((mouse_pos[0] + precision / 2) / precision) * precision, int((mouse_pos[1] + precision / 2) / precision) * precision]
                                 else:
-                                    mp = [int(mouse_pos[0] / precision) * precision, int(mouse_pos[1] / precision) * precision]
+                                    mp = [int((mouse_pos[0] + precision / 2) / precision) * precision, int((mouse_pos[1] + precision / 2) / precision) * precision]
                                     minx = min(mp[0], pos_click1[0])
                                     miny = min(mp[1], pos_click1[1])
                                     maxx = max(mp[0], pos_click1[0])
@@ -836,7 +831,7 @@ def inpute():
                     movepoint = False
                     cs = -1
                 else:
-                    all_terrain[str(lvl_select)][str(color_select)][str(cs)]["tp"] = [int((mouse_pos[0] + precision / 2) / precision) * precision, int((mouse_pos[1] + precision / 2) / precision) * precision]
+                    all_terrain[str(lvl_select)][str(color_select)][str(cs)]["tp"] = [(int((mouse_pos[0] + precision / 2) / precision) * precision) / screen_size[0], (int((mouse_pos[1] + precision / 2) / precision) * precision) / screen_size[1]]
                     cs = -1
             elif menu == "editeur":
                 menu_select()
@@ -859,13 +854,70 @@ def inpute():
 
 
 # tout est dans le nom
+def sauvegarde():
+    file_save["parametre"]["nb level"] = nb_level
+    file_save["level"] = all_terrain
+    for level in all_terrain:
+        for color in all_terrain[level]:
+            if color == "spawn":
+                all_terrain[level][color] = [all_terrain[level][color][0] / screen_size[0], all_terrain[level][color][1] / screen_size[1]]
+            else:
+                for block in all_terrain[level][color]:
+                    rect = all_terrain[level][color][block]
+                    rect["pos"] = 1
+                    rect.pop("pos")
+                    rect["visuel"] = 1
+                    rect.pop("visuel")
+                    if rect["spe"]:
+                        if not rect["move"]:
+                            rect["speed"] = 1
+                            rect.pop("speed")
+                            rect["stape"] = 1
+                            rect.pop("stape")
+                            rect["point"] = 1
+                            rect.pop("point")
+                            rect["exangle"] = 1
+                            rect.pop("exangle")
+                        if rect["tp"] == [0, 0]:
+                            rect["tp"] = [rect["tp"][0] / screen_size[0], rect["tp"][1] / screen_size[1]]
+                    else:
+                        rect["speed"] = 1
+                        rect.pop("speed")
+                        rect["stape"] = 1
+                        rect.pop("stape")
+                        rect["point"] = 1
+                        rect.pop("point")
+                        rect["exangle"] = 1
+                        rect.pop("exangle")
+                        rect["graviter"] = 1
+                        rect.pop("graviter")
+                        rect["tp"] = 1
+                        rect.pop("tp")
+                        rect["bump"] = 1
+                        rect.pop("bump")
+                        rect["move"] = 1
+                        rect.pop("move")
+                        rect["blackhole"] = 1
+                        rect.pop("blackhole")
+                        rect["aile"] = 1
+                        rect.pop("aile")
+                        rect["keep"] = 1
+                        rect.pop("keep")
+                        if rect["trigger"]:
+                            rect["final"] = 1
+                            rect.pop("final")
+    file_sauvegarde = open("save.json", "w+")
+    file_sauvegarde.write(json.dumps(file_save, indent=2))
+
+
 def quite():
+    sauvegarde()
     pygame.quit()
     quit()
 
 
 def collision(rect, pos, r):
-    global graviter_variateur, joueur, menu, lvl_select, color_select
+    global graviter_variateur, joueur, menu, lvl_select, color_select, fin
     recte = rect['pos']
     if rect["trigger"]:
         if recte[0] < pos[0] < recte[2]:
@@ -905,33 +957,17 @@ def collision(rect, pos, r):
                     if not rect["keep"]:
                         joueur[8] = True
                         rect["keep"] = True
-    elif rect["final"]:
+    elif rect["final"] and menu == "level":
         if recte[0] < pos[0] < recte[2]:
             if recte[1] - r < pos[1] < recte[1]:
-                lvl_select += 1
-                color_select = 0
-                if lvl_select > nb_level:
-                    menu = "main"
-                menu_select()
+                fin = True
             elif recte[3] < pos[1] < recte[3] + r:
-                lvl_select += 1
-                color_select = 0
-                if lvl_select > nb_level:
-                    menu = "main"
-                menu_select()
+                fin = True
         if recte[1] < pos[1] < recte[3]:
             if recte[0] - r < pos[0] < recte[0]:
-                lvl_select += 1
-                color_select = 0
-                if lvl_select > nb_level:
-                    menu = "main"
-                menu_select()
+                fin = True
             elif recte[2] < pos[0] < recte[2] + r:
-                lvl_select += 1
-                color_select = 0
-                if lvl_select > nb_level:
-                    menu = "main"
-                menu_select()
+                fin = True
 
     return pos
 
@@ -943,7 +979,7 @@ def distcarrer(p1, p2):
 
 
 def frame_stape(deltatime):
-    global joueur
+    global joueur, color_select, menu, lvl_select, fin
     expos = joueur[0][1]
     joueur[0][1] += joueur[2] * deltatime + 9.81 * deltatime * deltatime * joueur[4] * graviter_variateur
     d = joueur[0][1] - expos
@@ -972,6 +1008,13 @@ def frame_stape(deltatime):
     if not expos == joueur[0][1]:
         joueur[2] = 0
         joueur[5] = True
+    if fin:
+        lvl_select += 1
+        color_select = 0
+        if lvl_select == nb_level:
+            menu = "main"
+        menu_select()
+        fin = False
 
 
 menu_select()
