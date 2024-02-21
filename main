@@ -18,6 +18,7 @@ clock = pygame.time.Clock()
 file_save = json.loads(open("save.json", "r").read())
 deltatime = 0
 bouton_level_size = 116
+vitessex = 0
 marge = 10
 time = 0
 lvl_select = 0
@@ -34,6 +35,7 @@ binding = False
 show = True
 spawnPoint = False
 movepoint = False
+bh = True
 fin = False
 graviter_variateur = 1
 name_bind = ""
@@ -559,7 +561,7 @@ def bouton_action(select):
                     sliders[-1].set_value(rect["bump"])
                     t = f.render("Trous noir", False, (0, 0, 0))
                     texts.append(["Trous noir", (0, 0, 0), (screen_size[0] - t.get_width() - 150, 430), 30])
-                    sliders.append(SL.Slider((screen_size[0] - 350, 460), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), 0, 10000, 0, 3))
+                    sliders.append(SL.Slider((screen_size[0] - 350, 460), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), 0, 1000000, 0, 3))
                     sliders[-1].set_value(rect["blackhole"])
                     t = f.render("deuxième saut", False, (0, 0, 0))
                     texts.append(["deuxième saut", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 510), 30])
@@ -787,7 +789,7 @@ def inpute():
                                             sliders[1].set_value(rect["bump"])
                                             t = f.render("Trous noir", False, (0, 0, 0))
                                             texts.append(["Trous noir", (0, 0, 0), (screen_size[0] - t.get_width() - 150, 430), 30])
-                                            sliders.append(SL.Slider((screen_size[0] - 350, 460), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), 0, 10000, 0, 3))
+                                            sliders.append(SL.Slider((screen_size[0] - 350, 460), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), 0, 1000000, 0, 3))
                                             sliders[-1].set_value(rect["blackhole"])
                                             t = f.render("deuxième saut", False, (0, 0, 0))
                                             texts.append(["deuxième saut", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 510), 30])
@@ -979,7 +981,7 @@ def distcarrer(p1, p2):
 
 
 def frame_stape(deltatime):
-    global joueur, color_select, menu, lvl_select, fin
+    global joueur, color_select, menu, lvl_select, fin, vitessex, bh
     expos = joueur[0][1]
     joueur[0][1] += joueur[2] * deltatime + 9.81 * deltatime * deltatime * joueur[4] * graviter_variateur
     d = joueur[0][1] - expos
@@ -1003,11 +1005,19 @@ def frame_stape(deltatime):
                 break
             angle = math.atan2(joueur[0][1] - rect["visuel"][1], joueur[0][0] - rect["visuel"][0])
             force = min(rect["blackhole"] / dc, 50)
-            joueur[0][0] -= math.cos(angle) * force
+            vitessex -= math.cos(angle) * force
+            joueur[0][0] += vitessex * deltatime
             joueur[2] -= math.sin(angle) * force
+            if force > 10:
+                bh = True
     if not expos == joueur[0][1]:
-        joueur[2] = 0
-        joueur[5] = True
+        if not bh:
+            joueur[2] = 0
+            vitessex = 0
+            joueur[5] = True
+        else:
+            joueur[5] = True
+            bh = False
     if fin:
         lvl_select += 1
         color_select = 0
