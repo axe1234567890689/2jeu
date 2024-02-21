@@ -1,5 +1,5 @@
 # // import des bibliothèque
-
+import copy
 import math
 import pygame
 import json
@@ -31,6 +31,8 @@ pos_click1 = (-1, -1)
 menu = "main"
 binding = False
 show = True
+spawnPoint = False
+movepoint = False
 graviter_variateur = 1
 name_bind = ""
 # / couleur
@@ -158,10 +160,8 @@ def menu_select():
                             rect["visuel"] = [rect["visuel"][0], rect["visuel"][1], 110, 110]
                             rect["pos"] = [rect["visuel"][0], rect["visuel"][1], rect["visuel"][0] + 110, rect["visuel"][1] + 110]
                         if rect["move"] > 0:
-                            rect["visuel"][0] = rect["point"][0][0]
-                            rect["visuel"][1] = rect["point"][0][1]
-                            rect["pos"][0] = rect["point"][0][0]
-                            rect["pos"][1] = rect["point"][0][1]
+                            rect["visuel"] = copy.copy([rect["point"][0][0], rect["point"][0][1], rect["visuel"][2], rect["visuel"][3]])
+                            rect["pos"] = copy.copy([rect["point"][0][0], rect["point"][0][1], rect["visuel"][0] + rect["visuel"][2], rect["visuel"][1] + rect["visuel"][3]])
     elif menu == "settings" or menu == "settings pause":
         boutons.append(Boutons.Bouton(f, -1, "", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] + 400, screen_center[1] + 300), only_draw=True))
         boutons.append(Boutons.Bouton(f, 0, "x", (screen_center[0] - 400, screen_center[1] - 300), pos2=(screen_center[0] - 350, screen_center[1] - 250), animable=False))
@@ -220,31 +220,39 @@ def afficher_text(text, couleur, pos, taille):
 
 
 # affiche chaque Frame
-def affichage():
+def affichage(deltatime):
     screen.fill(couleur_fond)
 
     if menu == "level" or menu == "pause" or menu == "settings pause" or menu == "test" or menu == "editeur":
-        draw_level()
+        draw_level(deltatime)
 
     if pos_click1 != (-1, -1):
-        mp = [int(mouse_pos[0] / precision) * precision, int(mouse_pos[1] / precision) * precision]
+        mp = [int((mouse_pos[0] + precision / 2) / precision) * precision, int((mouse_pos[1] + precision / 2) / precision) * precision]
         minx = min(mp[0], pos_click1[0])
         miny = min(mp[1], pos_click1[1])
         maxx = max(mp[0], pos_click1[0])
         maxy = max(mp[1], pos_click1[1])
         pygame.draw.rect(screen, colors[color_select], [minx, miny, maxx - minx, maxy - miny])
 
-    if menu == "editeur" and show:
+    if menu == "editeur":
         for x in range(int(screen_size[0] / precision)):
             for y in range(int(screen_size[1] / precision)):
                 pygame.draw.rect(screen, (255, 255, 255), (x * precision, y * precision, 1, 1))
-        pygame.draw.circle(screen, (0, 0, 0), all_terrain[str(lvl_select)]["spawn"], 10)
-        if carer_select != -1:
-            pygame.draw.rect(screen, (100, 100, 100), (screen_size[0] - 400, 0, 400, screen_size[1]))
-            rect = all_terrain[str(lvl_select)][str(color_select)][str(carer_select)]
-            if rect["spe"]:
-                if rect["tp"] != [0, 0]:
-                    pygame.draw.circle(screen, colors[color_select], rect["tp"], 10)
+        if spawnPoint:
+            pygame.draw.circle(screen, (0, 0, 0), [int((mouse_pos[0] + precision / 2) / precision) * precision, int((mouse_pos[1] + precision / 2) / precision) * precision], 10)
+        else:
+            pygame.draw.circle(screen, (0, 0, 0), all_terrain[str(lvl_select)]["spawn"], 10)
+        if show:
+            if carer_select != -1:
+                pygame.draw.rect(screen, (100, 100, 100), (screen_size[0] - 400, 0, 400, screen_size[1]))
+                rect = all_terrain[str(lvl_select)][str(color_select)][str(carer_select)]
+                if rect["spe"]:
+                    if rect["tp"] != [0, 0]:
+                        pygame.draw.circle(screen, colors[color_select], rect["tp"], 10)
+                    elif rect["move"]:
+                        if movepoint:
+                            pygame.draw.circle(screen, (0, 0, 0), [int((mouse_pos[0] + precision / 2) / precision) * precision, int((mouse_pos[1] + precision / 2) / precision) * precision], 10)
+
 
     if show or not menu == "editeur":
         for bouton in boutons:
@@ -344,7 +352,7 @@ def affichage():
 
 
 # dessine les c omposer du niveau
-def draw_level():
+def draw_level(deltatime):
     for index in all_terrain["all"][str(color_select)]:
         pygame.draw.rect(screen, colors[color_select], all_terrain["all"][str(color_select)][index]["visuel"])
     for index in all_terrain[str(lvl_select)][str(color_select)]:
@@ -385,8 +393,8 @@ def draw_level():
                     x = rect["cible"][0] - rect["pos"][0]
                     angle = math.atan2(y, x)
                 rect["exangle"] = angle
-                mx = math.cos(angle) * rect["speed"]
-                my = math.sin(angle) * rect["speed"]
+                mx = math.cos(angle) * rect["speed"] * deltatime
+                my = math.sin(angle) * rect["speed"] * deltatime
                 if rect["pos"][0] < joueur[0][0] < rect["pos"][2]:
                     if rect["pos"][1] - joueur[1] - 2 < joueur[0][1] < rect["pos"][1]:
                         joueur[0][0] += mx
@@ -416,7 +424,7 @@ def save_setting():
 
 
 def bouton_action(select):
-    global menu, lvl_select, binding, name_bind, color_select, nb_level, texts, show, cs, boutons
+    global menu, lvl_select, binding, name_bind, color_select, nb_level, texts, show, cs, boutons, movepoint
     if menu == "main":
         if select == 1:
             menu = "level selector"
@@ -514,19 +522,23 @@ def bouton_action(select):
                     t = f.render("objectif", False, (0, 0, 0))
                     texts.append(["objectif", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 170), 30])
                     rect["final"] = False
-                    text = "OUI"
-                    if not rect["final"]:
-                        text = "NON"
-                    boutons.append(Boutons.Bouton(f, 3, text, (screen_size[0] - 150, 160), pos2=(screen_size[0] - 50, 220)))
-                    boutons[-1].text_pos = (screen_size[0] - 130, 95)
+                    text = "NON"
+                    boutons.append(Boutons.Bouton(f, 4, text, (screen_size[0] - 150, 160), pos2=(screen_size[0] - 50, 220)))
+                    boutons[-1].text_pos = (screen_size[0] - 130, 175)
                 elif not rect["spe"]:
-                    texts = [texts[0], texts[1]]
-                    boutons = [boutons[0], boutons[1], boutons[2], boutons[3]]
+                    texts = texts[0:2]
+                    boutons = boutons[0:4]
             elif select == 3:
                 rect["spe"] = not rect["spe"]
                 f = pygame.font.SysFont("arial", 30)
                 text = "NON"
                 if rect["spe"]:
+                    text = "OUI"
+                boutons[3].text = f.render(text, False, (0, 0, 0))
+                if rect["spe"]:
+                    sliders.clear()
+                    texts = texts[0:2]
+                    boutons = boutons[0:4]
                     text = "OUI"
                     rect["graviter"] = 1
                     rect["tp"] = [0, 0]
@@ -559,20 +571,49 @@ def bouton_action(select):
                     text = "NON"
                     boutons.append(Boutons.Bouton(f, 5, text, (screen_size[0] - 150, 500), pos2=(screen_size[0] - 50, 560)))
                     boutons[-1].text_pos = (screen_size[0] - 130, 515)
+                    t = f.render("mouvement", False, (0, 0, 0))
+                    texts.append(["mouvement", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 580), 30])
+                    text = "NON"
+                    boutons.append(Boutons.Bouton(f, 6, text, (screen_size[0] - 150, 570), pos2=(screen_size[0] - 50, 630)))
+                    boutons[-1].text_pos = (screen_size[0] - 130, 585)
                 else:
                     sliders.clear()
-                    texts = [texts[0], texts[1]]
-                    boutons = [boutons[0], boutons[1], boutons[2], boutons[3]]
-                    rect = {"rect": rect["rect"], "trigger": rect["trigger"], "spe": rect["spe"], "final": False, "visuel": rect["visuel"], "pos": rect["pos"]}
+                    texts = texts[0:2]
+                    boutons = boutons[0:4]
                     if not rect["trigger"]:
                         t = f.render("objectif", False, (0, 0, 0))
                         texts.append(["objectif", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 170), 30])
-                        text = "OUI"
-                        if not rect["final"]:
-                            text = "NON"
-                        boutons.append(Boutons.Bouton(f, 3, text, (screen_size[0] - 150, 160), pos2=(screen_size[0] - 50, 220)))
-                        boutons[-1].text_pos = (screen_size[0] - 130, 95)
-                boutons[3].text = f.render(text, False, (0, 0, 0))
+                        rect["final"] = False
+                        text = "NON"
+                        boutons.append(Boutons.Bouton(f, 4, text, (screen_size[0] - 150, 160), pos2=(screen_size[0] - 50, 220)))
+                        boutons[-1].text_pos = (screen_size[0] - 130, 175)
+            elif select == 6:
+                rect["move"] = -rect["move"] + 1
+                text = "NON"
+                f = pygame.font.SysFont("arial", 30)
+                if rect["move"]:
+                    text = "OUI"
+                    rect["speed"] = 100
+                    rect["stape"] = 1
+                    rect["poss"] = [rect["rect"][0:2], rect["rect"][0:2]]
+                    rect["point"] = [rect["visuel"][0:2], rect["visuel"][0:2]]
+                    rect["cible"] = copy.copy(rect["point"][1])
+                    rect["exangle"] = math.atan2(y, x)
+                    t = f.render("vitesse", False, (0, 0, 0))
+                    texts.append(["vitesse", (0, 0, 0), (screen_size[0] - t.get_width() - 150, 600), 30])
+                    sliders.append(SL.Slider((screen_size[0] - 350, 630), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), 5, 500, 0, 4))
+                    sliders[-1].set_value(rect["speed"])
+                    t = f.render("point de passage", False, (0, 0, 0))
+                    texts.append(["point de passage", (0, 0, 0), (screen_size[0] - t.get_width() - 100, 650), 30])
+                    boutons.append(Boutons.Bouton(f, 7, "mettre un point de", (screen_size[0] - 340, 690), pos2=(screen_size[0] - 50, 770)))
+                    boutons[-1].text_pos = (screen_size[0] - 300, 700)
+                    t = f.render("passage", False, (0, 0, 0))
+                    texts.append(["passage", (0, 0, 0), (screen_size[0] - t.get_width() - 150, 720), 30])
+                else:
+                    texts = texts[0:10]
+                    boutons = boutons[0:7]
+                    sliders.remove(sliders[-1])
+                boutons[6].text = f.render(text, False, (0, 0, 0))
             elif select == 5:
                 rect["aile"] = not rect["aile"]
                 text = "NON"
@@ -582,13 +623,25 @@ def bouton_action(select):
                 f = pygame.font.SysFont("arial", 30)
                 boutons[5].text = f.render(text, False, (0, 0, 0))
             elif select == 4:
-                cs = carer_select
+                if not rect["spe"] and not rect["trigger"]:
+                    rect["final"] = not rect["final"]
+                    text = "NON"
+                    if rect["final"]:
+                        text = "OUI"
+                    f = pygame.font.SysFont("arial", 30)
+                    boutons[-1].text = f.render(text, False, (0, 0, 0))
+                else:
+                    cs = carer_select
+                    menu_select()
                 show = False
+            elif select == 7:
+                movepoint = True
+                cs = carer_select
                 menu_select()
 
 
 def inpute():
-    global mouse_pos, deltatime, menu, binding, color_select, joueur, show, click_gauche, nb_click, pos_click1, nb_carer, carer_select, cs
+    global mouse_pos, deltatime, menu, binding, color_select, joueur, show, click_gauche, nb_click, pos_click1, nb_carer, carer_select, cs, spawnPoint, boutons, movepoint
     mouse_pos = pygame.mouse.get_pos()
 
     select = -1
@@ -676,87 +729,114 @@ def inpute():
                 if event.key == parametre["touches"]["DROITE"]:
                     joueur[6] = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = event.pos
             if event.button == 1 and select != -1 and select is not None:
                 bouton_action(select)
             elif event.button == 1:
                 if cs == -1:
                     if menu == "editeur":
-                        click_gauche = True
-                        nb_click = 0
-                        for Slider in sliders:
-                            if Slider.click(mouse_pos):
-                                nb_click = Slider.nb
-                        if nb_click == 0:
-                            carer_select = -1
-                            for carer in all_terrain[str(lvl_select)][str(color_select)]:
-                                rect = all_terrain[str(lvl_select)][str(color_select)][carer]["pos"]
-                                if rect[0] <= mouse_pos[0] <= rect[2] and rect[1] <= mouse_pos[1] <= rect[3]:
-                                    rect = all_terrain[str(lvl_select)][str(color_select)][carer]
-                                    carer_select = carer
-                                    f = pygame.font.SysFont("arial", 30)
-                                    t = f.render("traversable", False, (0, 0, 0))
-                                    texts.append(["traversable", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 10), 30])
-                                    text = "NON"
-                                    if not rect["trigger"]:
-                                        text = "OUI"
-                                    boutons.append(Boutons.Bouton(f, 2, text, (screen_size[0] - 150, 0), pos2=(screen_size[0] - 50, 60)))
-                                    boutons[-1].text_pos = (screen_size[0] - 130, 15)
-                                    t = f.render("speciale", False, (0, 0, 0))
-                                    texts.append(["speciale", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 90), 30])
-                                    text = "OUI"
-                                    if not rect["spe"]:
+                        if distcarrer(all_terrain[str(lvl_select)]["spawn"], mouse_pos) < joueur[1] ** 2:
+                            if spawnPoint:
+                                all_terrain[str(lvl_select)]["spawn"] = [int((mouse_pos[0] + precision / 2) / precision) * precision, int((mouse_pos[1] + precision / 2) / precision) * precision]
+                            spawnPoint = not spawnPoint
+                        elif spawnPoint:
+                            spawnPoint = False
+                            all_terrain[str(lvl_select)]["spawn"] = [int((mouse_pos[0] + precision / 2) / precision) * precision, int((mouse_pos[1] + precision / 2) / precision) * precision]
+                        else:
+                            click_gauche = True
+                            nb_click = 0
+                            for Slider in sliders:
+                                if Slider.click(mouse_pos):
+                                    nb_click = Slider.nb
+                            if nb_click == 0 and carer_select == -1 or nb_click == 0 and mouse_pos[0] < screen_size[0] - 400:
+                                carer_select = -1
+                                for carer in all_terrain[str(lvl_select)][str(color_select)]:
+                                    rect = all_terrain[str(lvl_select)][str(color_select)][carer]["pos"]
+                                    if rect[0] <= mouse_pos[0] <= rect[2] and rect[1] <= mouse_pos[1] <= rect[3]:
+                                        sliders.clear()
+                                        texts.clear()
+                                        boutons = [boutons[0], boutons[1]]
+                                        rect = all_terrain[str(lvl_select)][str(color_select)][carer]
+                                        carer_select = carer
+                                        f = pygame.font.SysFont("arial", 30)
+                                        t = f.render("traversable", False, (0, 0, 0))
+                                        texts.append(["traversable", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 10), 30])
                                         text = "NON"
-                                    boutons.append(Boutons.Bouton(f, 3, text, (screen_size[0] - 150, 80), pos2=(screen_size[0] - 50, 140)))
-                                    boutons[-1].text_pos = (screen_size[0] - 130, 95)
-                                    if rect["spe"]:
-                                        t = f.render("changement", False, (0, 0, 0))
-                                        texts.append(["changement", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 130), 30])
-                                        t = f.render("de graviter", False, (0, 0, 0))
-                                        texts.append(["de graviter", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 150), 30])
-                                        sliders.append(SL.Slider((screen_size[0] - 350, 200), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), -10, 10, 0, 1))
-                                        sliders[0].set_value(rect["graviter"] + 10)
-                                        t = f.render("TP", False, (0, 0, 0))
-                                        texts.append(["TP", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 240), 30])
-                                        boutons.append(Boutons.Bouton(f, 4, "mettre un point de", (screen_size[0] - 340, 270), pos2=(screen_size[0] - 50, 370)))
-                                        t = f.render("teleportation", False, (0, 0, 0))
-                                        texts.append(["teleportation", (0, 0, 0), (screen_size[0] - t.get_width() - 100, 320), 30])
-                                        boutons[-1].text_pos = (screen_size[0] - 320, 290)
-                                        t = f.render("rebond", False, (0, 0, 0))
-                                        texts.append(["rebond", (0, 0, 0), (screen_size[0] - t.get_width() - 150, 370), 30])
-                                        sliders.append(SL.Slider((screen_size[0] - 350, 400), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), 0, 500, 0, 2))
-                                        sliders[1].set_value(rect["bump"])
-                                        t = f.render("Trous noir", False, (0, 0, 0))
-                                        texts.append(["Trous noir", (0, 0, 0), (screen_size[0] - t.get_width() - 150, 430), 30])
-                                        sliders.append(SL.Slider((screen_size[0] - 350, 460), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), 0, 10000, 0, 3))
-                                        sliders[-1].set_value(rect["blackhole"])
-                                        t = f.render("deuxième saut", False, (0, 0, 0))
-                                        texts.append(["deuxième saut", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 510), 30])
-                                        text = "NON"
-                                        boutons.append(Boutons.Bouton(f, 5, text, (screen_size[0] - 150, 500), pos2=(screen_size[0] - 50, 560)))
-                                        boutons[-1].text_pos = (screen_size[0] - 130, 515)
-                                    elif not rect["trigger"]:
-                                        t = f.render("objectif", False, (0, 0, 0))
-                                        texts.append(["objectif", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 170), 30])
+                                        if not rect["trigger"]:
+                                            text = "OUI"
+                                        boutons.append(Boutons.Bouton(f, 2, text, (screen_size[0] - 150, 0), pos2=(screen_size[0] - 50, 60)))
+                                        boutons[-1].text_pos = (screen_size[0] - 130, 15)
+                                        t = f.render("speciale", False, (0, 0, 0))
+                                        texts.append(["speciale", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 90), 30])
                                         text = "OUI"
-                                        if not rect["final"]:
+                                        if not rect["spe"]:
                                             text = "NON"
-                                        boutons.append(Boutons.Bouton(f, 3, text, (screen_size[0] - 150, 160), pos2=(screen_size[0] - 50, 220)))
+                                        boutons.append(Boutons.Bouton(f, 3, text, (screen_size[0] - 150, 80), pos2=(screen_size[0] - 50, 140)))
                                         boutons[-1].text_pos = (screen_size[0] - 130, 95)
-                        if nb_click == 0 and carer_select == -1:
-                            menu_select()
-                            if pos_click1 == (-1, -1):
-                                pos_click1 = [int(mouse_pos[0] / precision) * precision, int(mouse_pos[1] / precision) * precision]
-                            else:
-                                mp = [int(mouse_pos[0] / precision) * precision, int(mouse_pos[1] / precision) * precision]
-                                minx = min(mp[0], pos_click1[0])
-                                miny = min(mp[1], pos_click1[1])
-                                maxx = max(mp[0], pos_click1[0])
-                                maxy = max(mp[1], pos_click1[1])
-                                all_terrain[str(lvl_select)][str(color_select)][str(nb_carer)] = {"rect": [minx / screen_size[0], miny / screen_size[1], maxx / screen_size[0], maxy / screen_size[1]], "pos": [minx, miny, maxx, maxy], "visuel": [minx, miny, maxx - minx, maxy - miny], "trigger": True, "spe": False}
-                                nb_carer += 1
-                                pos_click1 = (-1, -1)
+                                        if rect["spe"]:
+                                            t = f.render("changement", False, (0, 0, 0))
+                                            texts.append(["changement", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 130), 30])
+                                            t = f.render("de graviter", False, (0, 0, 0))
+                                            texts.append(["de graviter", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 150), 30])
+                                            sliders.append(SL.Slider((screen_size[0] - 350, 200), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), -10, 10, 0, 1))
+                                            sliders[0].set_value(rect["graviter"] + 10)
+                                            t = f.render("TP", False, (0, 0, 0))
+                                            texts.append(["TP", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 240), 30])
+                                            boutons.append(Boutons.Bouton(f, 4, "mettre un point de", (screen_size[0] - 340, 270), pos2=(screen_size[0] - 50, 370)))
+                                            t = f.render("teleportation", False, (0, 0, 0))
+                                            texts.append(["teleportation", (0, 0, 0), (screen_size[0] - t.get_width() - 100, 320), 30])
+                                            boutons[-1].text_pos = (screen_size[0] - 320, 290)
+                                            t = f.render("rebond", False, (0, 0, 0))
+                                            texts.append(["rebond", (0, 0, 0), (screen_size[0] - t.get_width() - 150, 370), 30])
+                                            sliders.append(SL.Slider((screen_size[0] - 350, 400), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), 0, 500, 0, 2))
+                                            sliders[1].set_value(rect["bump"])
+                                            t = f.render("Trous noir", False, (0, 0, 0))
+                                            texts.append(["Trous noir", (0, 0, 0), (screen_size[0] - t.get_width() - 150, 430), 30])
+                                            sliders.append(SL.Slider((screen_size[0] - 350, 460), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), 0, 10000, 0, 3))
+                                            sliders[-1].set_value(rect["blackhole"])
+                                            t = f.render("deuxième saut", False, (0, 0, 0))
+                                            texts.append(["deuxième saut", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 510), 30])
+                                            text = "NON"
+                                            boutons.append(Boutons.Bouton(f, 5, text, (screen_size[0] - 150, 500), pos2=(screen_size[0] - 50, 560)))
+                                            boutons[-1].text_pos = (screen_size[0] - 130, 515)
+                                            if rect["move"]:
+                                                t = f.render("vitesse", False, (0, 0, 0))
+                                                texts.append(["vitesse", (0, 0, 0), (screen_size[0] - t.get_width() - 150, 600), 30])
+                                                sliders.append(SL.Slider((screen_size[0] - 350, 630), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), 5, 500, 0, 4))
+                                                sliders[-1].set_value(rect["speed"])
+                                                t = f.render("point de passage", False, (0, 0, 0))
+                                                texts.append(["point de passage", (0, 0, 0), (screen_size[0] - t.get_width() - 100, 650), 30])
+                                                boutons.append(Boutons.Bouton(f, 7, "mettre un point de", (screen_size[0] - 340, 690), pos2=(screen_size[0] - 50, 770)))
+                                                boutons[-1].text_pos = (screen_size[0] - 300, 700)
+                                                t = f.render("passage", False, (0, 0, 0))
+                                                texts.append(["passage", (0, 0, 0), (screen_size[0] - t.get_width() - 150, 720), 30])
+                                        elif not rect["trigger"]:
+                                            t = f.render("objectif", False, (0, 0, 0))
+                                            texts.append(["objectif", (0, 0, 0), (screen_size[0] - t.get_width() - 200, 170), 30])
+                                            text = "OUI"
+                                            if not rect["final"]:
+                                                text = "NON"
+                                            boutons.append(Boutons.Bouton(f, 4, text, (screen_size[0] - 150, 160), pos2=(screen_size[0] - 50, 220)))
+                                            boutons[-1].text_pos = (screen_size[0] - 130, 175)
+                            if nb_click == 0 and carer_select == -1:
+                                menu_select()
+                                if pos_click1 == (-1, -1):
+                                    pos_click1 = [int((mouse_pos[0] + precision / 2) / precision) * precision, int((mouse_pos[1] + precision / 2) / precision) * precision]
+                                else:
+                                    mp = [int(mouse_pos[0] / precision) * precision, int(mouse_pos[1] / precision) * precision]
+                                    minx = min(mp[0], pos_click1[0])
+                                    miny = min(mp[1], pos_click1[1])
+                                    maxx = max(mp[0], pos_click1[0])
+                                    maxy = max(mp[1], pos_click1[1])
+                                    all_terrain[str(lvl_select)][str(color_select)][str(nb_carer)] = {"rect": [minx / screen_size[0], miny / screen_size[1], maxx / screen_size[0], maxy / screen_size[1]], "pos": [minx, miny, maxx, maxy], "visuel": [minx, miny, maxx - minx, maxy - miny], "trigger": True, "spe": False}
+                                    nb_carer += 1
+                                    pos_click1 = (-1, -1)
+                elif movepoint:
+                    all_terrain[str(lvl_select)][str(color_select)][str(cs)]["point"][1] = [int((mouse_pos[0] + precision / 2) / precision) * precision, int((mouse_pos[1] + precision / 2) / precision) * precision]
+                    movepoint = False
+                    cs = -1
                 else:
-                    all_terrain[str(lvl_select)][str(color_select)][str(cs)]["tp"] = [int(mouse_pos[0] / precision) * precision, int(mouse_pos[1] / precision) * precision]
+                    all_terrain[str(lvl_select)][str(color_select)][str(cs)]["tp"] = [int((mouse_pos[0] + precision / 2) / precision) * precision, int((mouse_pos[1] + precision / 2) / precision) * precision]
                     cs = -1
             elif menu == "editeur":
                 menu_select()
@@ -774,18 +854,14 @@ def inpute():
                     all_terrain[str(lvl_select)][str(color_select)][str(carer_select)]["bump"] = slider.value
                 elif slider.nb == 3:
                     all_terrain[str(lvl_select)][str(color_select)][str(carer_select)]["blackhole"] = slider.value
+                elif slider.nb == 4:
+                    all_terrain[str(lvl_select)][str(color_select)][str(carer_select)]["speed"] = slider.value
 
 
 # tout est dans le nom
 def quite():
     pygame.quit()
     quit()
-
-
-def dist(p1, p2):
-    x = p1[0] - p2[0]
-    y = p1[1] - p2[1]
-    return x * x + y * y
 
 
 def collision(rect, pos, r):
@@ -905,7 +981,7 @@ while True:
     if time >= 3:
         time -= 3
 
-    affichage()
+    affichage(deltatime)
     if menu == "level" or menu == "test":
         frame_stape(deltatime)
     inpute()
