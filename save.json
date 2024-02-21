@@ -5,200 +5,468 @@
       "GAUCHE": 113,
       "DROITE": 100,
       "PAUSE": 27,
-      "AVANCER DANS LES COULEURS":  1073741903,
-      "RECULER DANS LES COULEURS":  1073741904
+      "AVANCER DANS LES COULEURS": 1073741903,
+      "RECULER DANS LES COULEURS": 1073741904
     },
-    "screen size": [1920, 1080],
-    "nb level": 2
+    "screen size": [
+      1920,
+      1080
+    ],
+    "nb level": 6
   },
   "level": {
     "all": {
       "0": {
         "0": {
-          "rect": [0, 0, 1, 0],
+          "rect": [
+            0,
+            0,
+            1,
+            0
+          ],
           "trigger": true,
           "spe": false
         },
         "1": {
-          "rect": [0, 0, 0, 1],
+          "rect": [
+            0,
+            0,
+            0,
+            1
+          ],
           "trigger": true,
           "spe": false
         },
         "2": {
-          "rect": [1, 0, 1, 1],
+          "rect": [
+            1,
+            0,
+            1,
+            1
+          ],
           "trigger": true,
           "spe": false
         },
         "3": {
-          "rect": [0, 1, 1, 1],
+          "rect": [
+            0,
+            1,
+            1,
+            1
+          ],
           "trigger": true,
           "spe": false
         }
       },
       "1": {
         "0": {
-          "rect": [0, 0, 1, 0],
+          "rect": [
+            0,
+            0,
+            1,
+            0
+          ],
           "trigger": true,
           "spe": false
         },
         "1": {
-          "rect": [0, 0, 0, 1],
+          "rect": [
+            0,
+            0,
+            0,
+            1
+          ],
           "trigger": true,
           "spe": false
         },
         "2": {
-          "rect": [1, 0, 1, 1],
+          "rect": [
+            1,
+            0,
+            1,
+            1
+          ],
           "trigger": true,
           "spe": false
         },
         "3": {
-          "rect": [0, 1, 1, 1],
+          "rect": [
+            0,
+            1,
+            1,
+            1
+          ],
           "trigger": true,
           "spe": false
         }
       },
       "2": {
         "0": {
-          "rect": [0, 0, 1, 0],
+          "rect": [
+            0,
+            0,
+            1,
+            0
+          ],
           "trigger": true,
           "spe": false
         },
         "1": {
-          "rect": [0, 0, 0, 1],
+          "rect": [
+            0,
+            0,
+            0,
+            1
+          ],
           "trigger": true,
           "spe": false
         },
         "2": {
-          "rect": [1, 0, 1, 1],
+          "rect": [
+            1,
+            0,
+            1,
+            1
+          ],
           "trigger": true,
           "spe": false
         },
         "3": {
-          "rect": [0, 1, 1, 1],
+          "rect": [
+            0,
+            1,
+            1,
+            1
+          ],
           "trigger": true,
           "spe": false
         }
       },
       "3": {
         "0": {
-          "rect": [0, 0, 1, 0],
+          "rect": [
+            0,
+            0,
+            1,
+            0
+          ],
           "trigger": true,
           "spe": false
         },
         "1": {
-          "rect": [0, 0, 0, 1],
+          "rect": [
+            0,
+            0,
+            0,
+            1
+          ],
           "trigger": true,
           "spe": false
         },
         "2": {
-          "rect": [1, 0, 1, 1],
+          "rect": [
+            1,
+            0,
+            1,
+            1
+          ],
           "trigger": true,
           "spe": false
         },
         "3": {
-          "rect": [0, 1, 1, 1],
+          "rect": [
+            0,
+            1,
+            1,
+            1
+          ],
           "trigger": true,
           "spe": false
         }
       },
       "4": {
         "0": {
-          "rect": [0, 0, 1, 0],
+          "rect": [
+            0,
+            0,
+            1,
+            0
+          ],
           "trigger": true,
           "spe": false
         },
         "1": {
-          "rect": [0, 0, 0, 1],
+          "rect": [
+            0,
+            0,
+            0,
+            1
+          ],
           "trigger": true,
           "spe": false
         },
         "2": {
-          "rect": [1, 0, 1, 1],
+          "rect": [
+            1,
+            0,
+            1,
+            1
+          ],
           "trigger": true,
           "spe": false
         },
         "3": {
-          "rect": [0, 1, 1, 1],
+          "rect": [
+            0,
+            1,
+            1,
+            1
+          ],
           "trigger": true,
           "spe": false
         }
       },
       "5": {
         "0": {
-          "rect": [0, 0, 1, 0],
+          "rect": [
+            0,
+            0,
+            1,
+            0
+          ],
           "trigger": true,
           "spe": false
         },
         "1": {
-          "rect": [0, 0, 0, 1],
+          "rect": [
+            0,
+            0,
+            0,
+            1
+          ],
           "trigger": true,
           "spe": false
         },
         "2": {
-          "rect": [1, 0, 1, 1],
+          "rect": [
+            1,
+            0,
+            1,
+            1
+          ],
           "trigger": true,
           "spe": false
         },
         "3": {
-          "rect": [0, 1, 1, 1],
+          "rect": [
+            0,
+            1,
+            1,
+            1
+          ],
           "trigger": true,
           "spe": false
         }
-      }
+      },
+      "spawn": [
+        0.9,
+        0.9
+      ]
     },
     "0": {
       "0": {
-        "3": {
-          "rect": [0.0, 0.9, 0.052083333333333336, 1],
+        "0": {
+          "rect": [
+            0.984375,
+            0.0,
+            1.0,
+            1.0
+          ],
           "trigger": false,
           "spe": false,
           "final": true
         }
       },
-      "spawn": [0.1, 0.1]
+      "spawn": [
+        0.005208333333333333,
+        0.9907407407407407
+      ]
     },
     "1": {
       "0": {},
       "1": {
-        "0": {
-          "rect": [0.5, 0.5, 0.6, 0.6],
-          "trigger": true,
-          "spe": false
-        },
-        "1": {
-          "rect": [0.5, 0.5, 0, 0],
-          "trigger": false,
-          "spe": true,
-          "graviter": 1,
-          "tp": [0, 0],
-          "bump": 0,
-          "move": 1,
-          "poss": [[0.5, 0.5], [0.5, 1]],
-          "stape": 1,
-          "speed": 100,
-          "blackhole": 10000,
-          "aile": false
-        },
-        "2": {
-          "rect": [0.9, 0.9, 1, 1],
-          "trigger": false,
-          "spe": true,
-          "graviter": 1,
-          "tp": [0, 0],
-          "bump": 0,
-          "move": 0,
-          "blackhole": 0,
-          "aile": true,
-          "keep": false
-        },
         "3": {
-          "rect": [0.0, 0.9, 0.052083333333333336, 1],
+          "rect": [
+            0.984375,
+            0.0,
+            1.0,
+            1.0
+          ],
           "trigger": false,
           "spe": false,
           "final": true
         }
       },
-      "spawn": [0.1, 0.1]
+      "spawn": [
+        0.005208333333333333,
+        0.9907407407407407
+      ]
+    },
+    "2": {
+      "0": {
+        "4": {
+          "rect": [
+            0.9739583333333334,
+            0.0,
+            1.0,
+            0.046296296296296294
+          ],
+          "trigger": false,
+          "spe": false,
+          "final": true
+        }
+      },
+      "1": {
+        "6": {
+          "rect": [
+            0.3802083333333333,
+            0.0,
+            0.3958333333333333,
+            1.0
+          ],
+          "trigger": false,
+          "spe": true,
+          "graviter": -2.1999999999999993,
+          "tp": [
+            0.0,
+            0.0
+          ],
+          "bump": 0,
+          "move": 0,
+          "blackhole": 0,
+          "aile": false
+        }
+      },
+      "2": {},
+      "spawn": [
+        0.052083333333333336,
+        0.09259259259259259
+      ]
+    },
+    "3": {
+      "0": {
+        "1": {
+          "rect": [
+            0.40625,
+            0.0,
+            0.4114583333333333,
+            1.0
+          ],
+          "trigger": true,
+          "spe": false
+        }
+      },
+      "1": {
+        "3": {
+          "rect": [
+            0.40625,
+            0.0,
+            0.4114583333333333,
+            1.0
+          ],
+          "trigger": true,
+          "spe": false
+        }
+      },
+      "2": {
+        "4": {
+          "rect": [
+            0.40625,
+            0.0,
+            0.4114583333333333,
+            1.0
+          ],
+          "trigger": true,
+          "spe": false
+        },
+        "6": {
+          "rect": [
+            0.4010416666666667,
+            0.8981481481481481,
+            0.40625,
+            1.0
+          ],
+          "trigger": false,
+          "spe": true,
+          "graviter": 1,
+          "tp": [
+            0.421875,
+            0.9537037037037037
+          ],
+          "bump": 0,
+          "move": 0,
+          "blackhole": 0,
+          "aile": false
+        }
+      },
+      "3": {
+        "5": {
+          "rect": [
+            0.40625,
+            0.0,
+            0.4114583333333333,
+            1.0
+          ],
+          "trigger": true,
+          "spe": false
+        }
+      },
+      "spawn": [
+        0.005208333333333333,
+        0.9907407407407407
+      ]
+    },
+    "4": {
+      "0": {
+        "1": {
+          "rect": [
+            0.5208333333333334,
+            0.9907407407407407,
+            0.6614583333333334,
+            1.0
+          ],
+          "trigger": false,
+          "spe": true,
+          "graviter": 1,
+          "tp": [
+            0.0,
+            0.0
+          ],
+          "bump": 500,
+          "move": 0,
+          "blackhole": 0,
+          "aile": false
+        },
+        "3": {
+          "rect": [
+            0.5416666666666666,
+            0.0,
+            0.7604166666666666,
+            0.018518518518518517
+          ],
+          "trigger": false,
+          "spe": false,
+          "final": true
+        }
+      },
+      "1": {},
+      "2": {},
+      "3": {},
+      "4": {},
+      "spawn": [
+        0.005208333333333333,
+        0.9907407407407407
+      ]
     }
   }
 }
