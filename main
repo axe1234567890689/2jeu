@@ -762,8 +762,8 @@ def inpute():
                                 if nb_click == 0 and carer_select == -1 or nb_click == 0 and mouse_pos[0] < screen_size[0] - 400:
                                     carer_select = -1
                                     for carer in all_terrain[str(lvl_select)][str(color_select)]:
-                                        rect = all_terrain[str(lvl_select)][str(color_select)][carer]["pos"]
-                                        if rect[0] <= mouse_pos[0] <= rect[2] and rect[1] <= mouse_pos[1] <= rect[3]:
+                                        rect = all_terrain[str(lvl_select)][str(color_select)][carer]["visuel"]
+                                        if rect[0] <= mouse_pos[0] <= rect[2] + rect[0] and rect[1] <= mouse_pos[1] <= rect[3] + rect[1]:
                                             sliders.clear()
                                             texts.clear()
                                             boutons = [boutons[0], boutons[1]]
@@ -898,6 +898,9 @@ def sauvegarde():
                             rect.pop("point")
                             rect["cible"] = 1
                             rect.pop("cible")
+                            rect["exangle"] = 1
+                            rect.pop("exangle")
+                            rect["stape"] = 1
                         if not rect["tp"] == [0, 0]:
                             rect["tp"] = [rect["tp"][0] / screen_size[0], rect["tp"][1] / screen_size[1]]
                     else:
