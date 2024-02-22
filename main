@@ -944,10 +944,12 @@ def collision(rect, pos, r):
     recte = rect['pos']
     if rect["trigger"]:
         if recte[0] < pos[0] < recte[2]:
-            if recte[1] - r < pos[1] < recte[1]:
-                joueur[5] = True
+                if graviter_variateur > 0:
+                    joueur[5] = True
                 return [pos[0], pos[1] - (recte[1] - pos[1] - r) * -1]
             elif recte[3] < pos[1] < recte[3] + r:
+                if graviter_variateur < 0:
+                    joueur[5] = True
                 return [pos[0], pos[1] + (pos[1] - recte[3] - r) * -1]
         if recte[1] < pos[1] < recte[3]:
             if recte[0] - r < pos[0] < recte[0]:
