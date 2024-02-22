@@ -342,11 +342,11 @@ def affichage(deltatime):
                     (bouton.pos2[1] - bouton.pos1[1]) - 32))
 
             screen.blit(bouton.text, bouton.text_pos)
+        for text in texts:
+            afficher_text(text[0], text[1], text[2], text[3])
     for Slider in sliders:
         Slider.draw(screen)
 
-    for text in texts:
-        afficher_text(text[0], text[1], text[2], text[3])
 
     pygame.display.flip()
 
@@ -700,8 +700,6 @@ def inpute():
                     joueur[7] = True
                 elif event.key == parametre["touches"]["DROITE"]:
                     joueur[6] = True
-                elif event.key == pygame.K_t:
-                    joueur[0] = [mouse_pos[0], mouse_pos[1]]
             elif menu == "editeur":
                 if event.key == pygame.K_TAB:
                     show = not show
@@ -746,6 +744,7 @@ def inpute():
                             all_terrain[str(lvl_select)][str(color_select)][str(nb_carer)] = {"rect": [minx / screen_size[0], miny / screen_size[1], maxx / screen_size[0], maxy / screen_size[1]], "pos": [minx, miny, maxx, maxy], "visuel": [minx, miny, maxx - minx, maxy - miny], "trigger": True, "spe": False}
                             nb_carer += 1
                             pos_click1 = (-1, -1)
+                            show = True
                         else:
                             if distcarrer(all_terrain[str(lvl_select)]["spawn"], mouse_pos) < joueur[1] ** 2:
                                 if spawnPoint:
@@ -844,9 +843,11 @@ def inpute():
                     all_terrain[str(lvl_select)][str(color_select)][str(cs)]["poss"][1] = [all_terrain[str(lvl_select)][str(color_select)][str(cs)]["point"][1][0] / screen_size[0], all_terrain[str(lvl_select)][str(color_select)][str(cs)]["point"][1][1] / screen_size[1]]
                     movepoint = False
                     cs = -1
+                    show = True
                 else:
                     all_terrain[str(lvl_select)][str(color_select)][str(cs)]["tp"] = [int((mouse_pos[0] + precision / 2) / precision) * precision, int((mouse_pos[1] + precision / 2) / precision) * precision]
                     cs = -1
+                    show = True
             elif menu == "editeur":
                 menu_select()
         elif event.type == pygame.MOUSEBUTTONUP:
