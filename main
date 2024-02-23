@@ -59,6 +59,7 @@ parametre_no_save = file_save["parametre"]
 nb_level = parametre["nb level"]
 nb_level_debloquer = parametre["nb level debloquer"]
 screen_size = parametre["screen size"]
+tuto_Text = ["Les carer vide sont tes objectifs", "Tu peux changer les platformes avec @AVANCER DANS LES COULEURS@ ou @RECULER DANS LES COULEURS@", "Les blocks jaunes fluo modifie la graviter", "Les cyan te téléporte", "Les trous noirs t'aspire et tu peut recommencer avec r", "Les ailes t'offre un double saut", "Tu peux te déplacer grâce au platform"]
 propy = screen_size[1] / 1080
 propx = screen_size[0] / 1920
 joueur = [[-1, -1], 10 * propy, 0, 240, 60 * propy, False, False, False, False]
@@ -356,6 +357,22 @@ def affichage(deltatime):
     pygame.display.flip()
 
 
+def modif(text):
+    partie = text.split("@")
+    i = 0
+    x = 0
+    for p in partie:
+        i += 1
+        if i == 2:
+            i = 0
+            partie[x] = pygame.key.name(parametre["touches"][p])
+        x += 1
+    text = ""
+    for p in partie:
+        text += p
+    return text
+
+
 # dessine les c omposer du niveau
 def draw_level(deltatime):
     for index in all_terrain["all"][str(color_select)]:
@@ -419,6 +436,9 @@ def draw_level(deltatime):
         screen.blit(aile_image, (joueur[0][0] - 55, joueur[0][1] - 70))
     if show or not menu == "editeur":
         pygame.draw.circle(screen, colors[color_select], joueur[0], joueur[1])
+    if menu == "level":
+        if nb_level_debloquer == lvl_select + 1 and lvl_select < len(tuto_Text):
+            afficher_text(modif(tuto_Text[lvl_select]), (0, 0, 0), (screen_center[0] - 200, 50), 30)
 
 
 # permet de connaitre une position pendant une transition
