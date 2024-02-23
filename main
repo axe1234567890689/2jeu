@@ -21,6 +21,7 @@ deltatime = 0
 bouton_level_size = 116
 vitessex = 0
 marge = 10
+nb_level_base = 7
 time = 0
 lvl_select = 0
 color_select = 0
@@ -56,6 +57,7 @@ mouse_pos = ()
 parametre = file_save["parametre"]
 parametre_no_save = file_save["parametre"]
 nb_level = parametre["nb level"]
+nb_level_debloquer = parametre["nb level debloquer"]
 screen_size = parametre["screen size"]
 propy = screen_size[1] / 1080
 propx = screen_size[0] / 1920
@@ -139,7 +141,7 @@ def menu_select():
         index = 0
         for y in range(nb_boutony):
             for x in range(nb_boutonx):
-                if index < nb_level:
+                if index < nb_level_debloquer:
                     if index == 0:
                         text = "TUTO"
                     else:
@@ -248,6 +250,9 @@ def affichage(deltatime):
                 pygame.draw.rect(screen, (100, 100, 100), (screen_size[0] - 400, 0, 400, screen_size[1]))
                 rect = all_terrain[str(lvl_select)][str(color_select)][str(carer_select)]
                 if rect["spe"]:
+                    afficher_text(str(int(rect["graviter"] * 100) / 100) + "G", (0, 0, 0), (screen_size[0] - 300, 150), 30)
+                    afficher_text(str(int(rect["bump"] * 100) / 100), (0, 0, 0), (screen_size[0] - 350, 370), 30)
+                    afficher_text(str(int(rect["blackhole"])), (0, 0, 0), (screen_size[0] - 400, 425), 30)
                     if rect["tp"] != [0, 0]:
                         pygame.draw.circle(screen, colors[color_select], [rect["tp"][0] * screen_size[0], rect["tp"][1] * screen_size[1]], 10)
                     elif rect["move"]:
@@ -379,32 +384,36 @@ def draw_level(deltatime):
             screen.blit(image, (rect["visuel"][0] - image.get_width() / 2, rect["visuel"][1] - image.get_height() / 2))
         elif not rect["keep"]:
             screen.blit(aile_image, (rect["visuel"][0], rect["visuel"][1]))
-        if rect["spe"]:
-            if rect["move"] != 0:
-                y = rect["cible"][1] - rect["pos"][1]
-                x = rect["cible"][0] - rect["pos"][0]
-                angle = math.atan2(y, x)
-                if max(angle - rect["exangle"], rect["exangle"] - angle) > math.pi / 2:
-                    rect["stape"] += 1
-                    if rect["stape"] > rect["move"]:
-                        rect["stape"] = 0
-                    rect["cible"] = rect["point"][rect["stape"]]
-                    y = rect["cible"][1] - rect["pos"][1]
-                    x = rect["cible"][0] - rect["pos"][0]
-                    angle = math.atan2(y, x)
-                rect["exangle"] = angle
-                mx = math.cos(angle) * rect["speed"] * deltatime
-                my = math.sin(angle) * rect["speed"] * deltatime
-                if rect["pos"][0] < joueur[0][0] < rect["pos"][2]:
-                    if rect["pos"][1] - joueur[1] - 2 < joueur[0][1] < rect["pos"][1]:
-                        joueur[0][0] += mx
-                        joueur[0][1] += my
-                rect["pos"][0] += mx
-                rect["pos"][2] += mx
-                rect["pos"][1] += my
-                rect["pos"][3] += my
-                rect["visuel"][0] += mx
-                rect["visuel"][1] += my
+    for color in all_terrain[str(lvl_select)]:
+        if not color == "spawn":
+            for index in all_terrain[str(lvl_select)][color]:
+                rect = all_terrain[str(lvl_select)][color][index]
+                if rect["spe"]:
+                    if rect["move"] != 0:
+                        y = rect["cible"][1] - rect["pos"][1]
+                        x = rect["cible"][0] - rect["pos"][0]
+                        angle = math.atan2(y, x)
+                        if max(angle - rect["exangle"], rect["exangle"] - angle) > math.pi / 2:
+                            rect["stape"] += 1
+                            if rect["stape"] > rect["move"]:
+                                rect["stape"] = 0
+                            rect["cible"] = rect["point"][rect["stape"]]
+                            y = rect["cible"][1] - rect["pos"][1]
+                            x = rect["cible"][0] - rect["pos"][0]
+                            angle = math.atan2(y, x)
+                        rect["exangle"] = angle
+                        mx = math.cos(angle) * rect["speed"] * deltatime
+                        my = math.sin(angle) * rect["speed"] * deltatime
+                        if rect["pos"][0] < joueur[0][0] < rect["pos"][2]:
+                            if rect["pos"][1] - joueur[1] - 2 < joueur[0][1] < rect["pos"][1]:
+                                joueur[0][0] += mx
+                                joueur[0][1] += my
+                        rect["pos"][0] += mx
+                        rect["pos"][2] += mx
+                        rect["pos"][1] += my
+                        rect["pos"][3] += my
+                        rect["visuel"][0] += mx
+                        rect["visuel"][1] += my
 
     if joueur[8]:
         screen.blit(aile_image, (joueur[0][0] - 55, joueur[0][1] - 70))
@@ -443,7 +452,7 @@ def bouton_action(select):
         elif select == 3:
             quite()
     elif menu == "level selector":
-        if select == nb_level + 1:
+        if select == nb_level_debloquer + 1:
             menu = "main"
             menu_select()
         else:
@@ -641,7 +650,7 @@ def bouton_action(select):
 
 
 def inpute():
-    global mouse_pos, deltatime, menu, binding, color_select, joueur, show, click_gauche, nb_click, pos_click1, nb_carer, carer_select, cs, spawnPoint, boutons, movepoint
+    global mouse_pos, deltatime, menu, binding, color_select, joueur, show, click_gauche, nb_click, pos_click1, nb_carer, carer_select, cs, spawnPoint, boutons, movepoint, lvl_select, nb_level
     mouse_pos = pygame.mouse.get_pos()
 
     select = -1
@@ -703,8 +712,15 @@ def inpute():
             elif menu == "editeur":
                 if event.key == pygame.K_TAB:
                     show = not show
-                elif event.key == pygame.K_p:
-                    print(json.dumps(all_terrain[str(lvl_select)]))
+                elif event.key == parametre["touches"]["GAUCHE"] and lvl_select > nb_level_base - 3:
+                    if lvl_select == nb_level - 1 and all_terrain[str(lvl_select)] == {"0": {}, "1": {}, "2": {}, "3": {}, "4": {}, "5": {}, "spawn": [100, 100]}:
+                        nb_level -= 1
+                    lvl_select -= 1
+                elif event.key == parametre["touches"]["DROITE"]:
+                    lvl_select += 1
+                    if lvl_select == nb_level:
+                        menu = "main"
+                        bouton_action(4)
                 elif event.key == pygame.K_DELETE:
                     if carer_select != -1:
                         all_terrain[str(lvl_select)][str(color_select)].pop(str(carer_select))
@@ -871,6 +887,7 @@ def inpute():
 # tout est dans le nom
 def sauvegarde():
     file_save["parametre"]["nb level"] = nb_level
+    file_save["parametre"]["nb level debloquer"] = nb_level_debloquer
     file_save["level"] = all_terrain
     for level in all_terrain:
         for color in all_terrain[level]:
@@ -944,6 +961,7 @@ def collision(rect, pos, r):
     recte = rect['pos']
     if rect["trigger"]:
         if recte[0] < pos[0] < recte[2]:
+            if recte[1] - r < pos[1] < recte[1]:
                 if graviter_variateur > 0:
                     joueur[5] = True
                 return [pos[0], pos[1] - (recte[1] - pos[1] - r) * -1]
@@ -1005,7 +1023,7 @@ def distcarrer(p1, p2):
 
 
 def frame_stape(deltatime):
-    global joueur, color_select, menu, lvl_select, fin, vitessex, bh
+    global joueur, color_select, menu, lvl_select, fin, vitessex, bh, nb_level_debloquer
     expos = joueur[0][1]
     joueur[5] = False
     joueur[0][1] += joueur[2] * deltatime + 9.81 * deltatime * deltatime * joueur[4] * graviter_variateur
@@ -1047,6 +1065,8 @@ def frame_stape(deltatime):
             menu = "main"
         else:
             lvl_select += 1
+            if lvl_select + 1 > nb_level_debloquer:
+                nb_level_debloquer = lvl_select + 1
         menu_select()
         fin = False
 
