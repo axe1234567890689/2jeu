@@ -977,7 +977,7 @@ def quite():
 
 
 def collision(rect, pos, r):
-    global graviter_variateur, joueur, menu, lvl_select, color_select, fin
+    global graviter_variateur, joueur, menu, lvl_select, color_select, fin, spe
     recte = rect['pos']
     if rect["trigger"]:
         if recte[0] < pos[0] < recte[2]:
@@ -995,43 +995,60 @@ def collision(rect, pos, r):
             elif recte[2] < pos[0] < recte[2] + r:
                 return [pos[0] + (pos[0] - recte[2] - r) * -1, pos[1]]
     elif rect["spe"]:
-        if recte[0] < pos[0] < recte[2]:
-            if recte[1] - r < pos[1] < recte[1] or recte[3] < pos[1] < recte[3] + r:
+        if recte[0] <= pos[0] <= recte[2]:
+            if recte[1] - r < pos[1] <= recte[1] or recte[3] <= pos[1] < recte[3] + r:
+                spe = True
                 graviter_variateur = rect["graviter"]
                 if not rect["tp"] == [0, 0]:
                     return [rect["tp"][0], rect["tp"][1]]
                 if graviter_variateur < 0:
-                    joueur[2] += rect["bump"]
+                    joueur[2] = rect["bump"]
                 else:
-                    joueur[2] -= rect["bump"]
+                    joueur[2] = -rect["bump"]
                 if rect["aile"]:
                     if not rect["keep"]:
                         joueur[8] = True
                         rect["keep"] = True
-        if recte[1] < pos[1] < recte[3]:
-            if recte[0] - r < pos[0] < recte[0] or recte[2] < pos[0] < recte[2] + r:
+        if recte[1] <= pos[1] <= recte[3]:
+            if recte[0] - r < pos[0] <= recte[0] or recte[2] <= pos[0] < recte[2] + r:
+                spe = True
                 graviter_variateur = rect["graviter"]
                 if not rect["tp"] == [0, 0]:
                     return [rect["tp"][0], rect["tp"][1]]
                 if graviter_variateur < 0:
-                    joueur[2] += rect["bump"]
+                    joueur[2] = rect["bump"]
                 else:
-                    joueur[2] -= rect["bump"]
+                    joueur[2] = -rect["bump"]
                 if rect["aile"]:
                     if not rect["keep"]:
                         joueur[8] = True
                         rect["keep"] = True
+        if recte[0] <= pos[0] <= recte[2] and recte[1] <= pos[1] <= recte[3]:
+            spe = True
+            graviter_variateur = rect["graviter"]
+            if not rect["tp"] == [0, 0]:
+                return [rect["tp"][0], rect["tp"][1]]
+            if graviter_variateur < 0:
+                joueur[2] = rect["bump"]
+            else:
+                joueur[2] = -rect["bump"]
+            if rect["aile"]:
+                if not rect["keep"]:
+                    joueur[8] = True
+                    rect["keep"] = True
     elif rect["final"] and menu == "level":
-        if recte[0] < pos[0] < recte[2]:
-            if recte[1] - r < pos[1] < recte[1]:
+        if recte[0] <= pos[0] <= recte[2]:
+            if recte[1] - r < pos[1] <= recte[1]:
                 fin = True
-            elif recte[3] < pos[1] < recte[3] + r:
+            elif recte[3] <= pos[1] < recte[3] + r:
                 fin = True
         if recte[1] < pos[1] < recte[3]:
-            if recte[0] - r < pos[0] < recte[0]:
+            if recte[0] - r < pos[0] <= recte[0]:
                 fin = True
-            elif recte[2] < pos[0] < recte[2] + r:
+            elif recte[2] <= pos[0] < recte[2] + r:
                 fin = True
+        if recte[0] <= pos[0] <= recte[2] and recte[1] <= pos[1] <= recte[3]:
+            fin = True
 
     return pos
 
@@ -1043,7 +1060,8 @@ def distcarrer(p1, p2):
 
 
 def frame_stape(deltatime):
-    global joueur, color_select, menu, lvl_select, fin, vitessex, bh, nb_level_debloquer
+    global joueur, color_select, menu, lvl_select, fin, vitessex, bh, nb_level_debloquer, spe
+    spe = False
     expos = joueur[0][1]
     joueur[5] = False
     joueur[0][1] += joueur[2] * deltatime + 9.81 * deltatime * deltatime * joueur[4] * graviter_variateur
@@ -1074,7 +1092,7 @@ def frame_stape(deltatime):
             if force > 10:
                 bh = True
     if not expos == joueur[0][1]:
-        if not bh:
+        if not bh and not spe:
             joueur[2] = 0
             vitessex = 0
         else:
