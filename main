@@ -36,6 +36,7 @@ menu = "main"
 binding = False
 show = True
 spawnPoint = False
+spe = False
 movepoint = False
 bh = True
 fin = False
@@ -59,7 +60,7 @@ parametre_no_save = file_save["parametre"]
 nb_level = parametre["nb level"]
 nb_level_debloquer = parametre["nb level debloquer"]
 screen_size = parametre["screen size"]
-tuto_Text = ["Les carer vide sont tes objectifs", "Tu peux changer les platformes avec @AVANCER DANS LES COULEURS@ ou @RECULER DANS LES COULEURS@", "Les blocks jaunes fluo modifie la graviter", "Les cyan te téléporte", "Les trous noirs t'aspire et tu peut recommencer avec r", "Les ailes t'offre un double saut", "Tu peux te déplacer grâce au platform"]
+tuto_Text = ["Les carer vide sont tes objectifs", "Tu peux changer les platformes avec @AVANCER DANS LES COULEURS@ ou @RECULER DANS LES COULEURS@", "Les blocks jaunes fluo modifie la graviter", "Les cyan te téléporte", "Les trous noirs t'aspire et tu peut recommencer avec r", "Les ailes t'offre un double saut", "Tu peux te déplacer grâce au platform", "Les violets te propulse"]
 propy = screen_size[1] / 1080
 propx = screen_size[0] / 1920
 joueur = [[-1, -1], 10 * propy, 0, 240, 60 * propy, False, False, False, False]
@@ -589,7 +590,7 @@ def bouton_action(select):
                     boutons[-1].text_pos = (screen_size[0] - 320, 290)
                     t = f.render("rebond", False, (0, 0, 0))
                     texts.append(["rebond", (0, 0, 0), (screen_size[0] - t.get_width() - 150, 370), 30])
-                    sliders.append(SL.Slider((screen_size[0] - 350, 400), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), 0, 500, 0, 2))
+                    sliders.append(SL.Slider((screen_size[0] - 350, 400), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), 0, 1500, 0, 2))
                     sliders[-1].set_value(rect["bump"])
                     t = f.render("Trous noir", False, (0, 0, 0))
                     texts.append(["Trous noir", (0, 0, 0), (screen_size[0] - t.get_width() - 150, 430), 30])
@@ -835,7 +836,7 @@ def inpute():
                                                 boutons[-1].text_pos = (screen_size[0] - 320, 290)
                                                 t = f.render("rebond", False, (0, 0, 0))
                                                 texts.append(["rebond", (0, 0, 0), (screen_size[0] - t.get_width() - 150, 370), 30])
-                                                sliders.append(SL.Slider((screen_size[0] - 350, 400), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), 0, 500, 0, 2))
+                                                sliders.append(SL.Slider((screen_size[0] - 350, 400), (300, 20), (200, 200, 200), (100, 100, 100), (0, 0, 0), 0, 1500, 0, 2))
                                                 sliders[1].set_value(rect["bump"])
                                                 t = f.render("Trous noir", False, (0, 0, 0))
                                                 texts.append(["Trous noir", (0, 0, 0), (screen_size[0] - t.get_width() - 150, 430), 30])
